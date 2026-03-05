@@ -151,17 +151,20 @@
 
         // --- ЗАГРУЗКА ТОВАРОВ ИЗ БАЗЫ ДАННЫХ (FastAPI) ---
         async function loadProducts() {
-            try {
-                const response = await fetch(`${API_URL}/api/products`);
-                if (!response.ok) throw new Error("Сервер ответил ошибкой");
-                
-                products = await response.json();
-                renderProducts(); // Рисуем карточки после успешной загрузки
-            } catch (error) {
-                console.error("Ошибка загрузки:", error);
-                document.getElementById('products').innerHTML = '<div class="loader" style="color: var(--danger-color);">⚠️ Ошибка подключения к серверу. Проверьте ngrok!</div>';
+    try {
+        const response = await fetch(`${API_URL}/api/products`, {
+            headers: {
+                "ngrok-skip-browser-warning": "true" // Пропускаем проверку ngrok
             }
-        }
+        });
+        if (!response.ok) throw new Error("Ошибка");
+        products = await response.json();
+        renderProducts();
+    } catch (error) {
+        console.error("Ошибка загрузки:", error);
+        document.getElementById('products').innerHTML = '<div class="loader">⚠️ Ошибка подключения. Нажми "Visit Site" по ссылке ngrok!</div>';
+    }
+}
 
         function setCategory(cat, element) {
             haptic();
@@ -364,3 +367,4 @@
 </body>
 
 </html>
+
