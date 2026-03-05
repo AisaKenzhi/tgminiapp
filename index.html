@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Детская Одежда</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --text-color: #1f2937;
+            --card-bg: #ffffff;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent-color: #f472b6; /* Мягкий розовый для детской тематики */
+            --danger-color: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            padding-bottom: 80px; /* Место для кнопки Telegram */
+            transition: background-color 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            background-color: #e5e7eb;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            flex-grow: 1;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .product-stock {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            display: none;
+        }
+
+        .cart-controls button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Магазин "Кроха" 👶</h1>
+    <div class="products-grid" id="products"></div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран
+        
+        // Адаптация цветов под тему Telegram пользователя
+        if (tg.themeParams.bg_color) {
+            document.documentElement.style.setProperty('--bg-color', tg.themeParams.secondary_bg_color);
+            document.documentElement.style.setProperty('--card-bg', tg.themeParams.bg_color);
+            document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color);
+        }
+
+        // База данных товаров (Mock-данные)
+        const products = [
+            { id: 1, name: "Комбинезон 'Мишка'", price: 1500, stock: 5, img: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=200&q=80" },
+            { id: 2, name: "Платье с бантиком", price: 1200, stock: 2, img: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=200&q=80" },
+            { id: 3, name: "Боди для малыша", price: 800, stock: 10, img: "https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=200&q=80" },
+            { id: 4, name: "Теплая курточка", price: 2500, stock: 0, img: "https://images.unsplash.com/photo-1542295669297-4d352b042bce?auto=format&fit=crop&w=200&q=80" } // Нет в наличии
+        ];
+
+        let cart = {};
+
+        // Функция отрисовки товаров
+        function renderProducts() {
+            const container = document.getElementById('products');
+            container.innerHTML = '';
+
+            products.forEach(p => {
+                const cartQty = cart[p.id] || 0;
+                const isOutOfStock = p.stock === 0;
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${p.img}" alt="${p.name}" class="product-img">
+                    <h3 class="product-title">${p.name}</h3>
+                    <div class="product-price">${p.price} ₽</div>
+                    <div class="product-stock">В наличии: ${p.stock} шт.</div>
+                    
+                    ${!isOutOfStock && cartQty === 0 ? 
+                        `<button class="btn" onclick="updateCart(${p.id}, 1)">В корзину</button>` : ''
+                    }
+                    
+                    ${isOutOfStock ? 
+                        `<button class="btn" disabled>Нет в наличии</button>` : ''
+                    }
+
+                    ${cartQty > 0 ? `
+                        <div class="cart-controls" style="display: flex;">
+                            <button onclick="updateCart(${p.id}, -1)">-</button>
+                            <span>${cartQty}</span>
+                            <button onclick="updateCart(${p.id}, 1)" ${cartQty >= p.stock ? 'disabled' : ''}>+</button>
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Логика корзины
+        function updateCart(id, change) {
+            const product = products.find(p => p.id === id);
+            if (!cart[id]) cart[id] = 0;
+            
+            cart[id] += change;
+            
+            if (cart[id] <= 0) delete cart[id];
+            if (cart[id] > product.stock) cart[id] = product.stock;
+
+            renderProducts();
+            updateTelegramButton();
+        }
+
+        // Обновление главной кнопки Telegram (MainButton)
+        function updateTelegramButton() {
+            let total = 0;
+            let itemsCount = 0;
+
+            for (const [id, qty] of Object.entries(cart)) {
+                const product = products.find(p => p.id == id);
+                total += product.price * qty;
+                itemsCount += qty;
+            }
+
+            if (itemsCount > 0) {
+                tg.MainButton.text = `Оформить заказ на ${total} ₽`;
+                tg.MainButton.show();
+            } else {
+                tg.MainButton.hide();
+            }
+        }
+
+        // Обработка нажатия на главную кнопку
+        tg.MainButton.onClick(() => {
+            const orderData = {
+                items: cart,
+                user: tg.initDataUnsafe?.user?.id || 'guest'
+            };
+            
+            // Отправляем данные обратно боту
+            tg.sendData(JSON.stringify(orderData)); 
+        });
+
+        // Первый рендер
+        renderProducts();
+    </script>
+</body>
+</html>
