@@ -35,33 +35,38 @@
         const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev";
 
         async function load() {
-            const res = await fetch(`${API_URL}/api/products`);
-            const data = await res.json();
-            const list = document.getElementById('list');
-            list.innerHTML = '';
-            data.forEach(p => {
-                list.innerHTML += `<div class="product-item">
-                    <span>${p.name} - ${p.price} ₴</span>
-                    <button class="del-btn" onclick="del(${p.id})">Удалить</button>
-                </div>`;
-            });
-        }
+    const res = await fetch(`${API_URL}/api/products`, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+    });
+    const data = await res.json();
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    data.forEach(p => {
+        list.innerHTML += `<div class="product-item">
+            <span>${p.name} - ${p.price} ₴</span>
+            <button class="del-btn" onclick="del(${p.id})">Удалить</button>
+        </div>`;
+    });
+}
 
-        async function addProduct() {
-            const item = {
-                name: document.getElementById('name').value,
-                price: parseInt(document.getElementById('price').value),
-                category: document.getElementById('category').value,
-                image: document.getElementById('image').value,
-                description: document.getElementById('desc').value
-            };
-            await fetch(`${API_URL}/api/products`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(item)
-            });
-            location.reload();
-        }
+async function addProduct() {
+    const item = {
+        name: document.getElementById('name').value,
+        price: parseInt(document.getElementById('price').value),
+        category: document.getElementById('category').value,
+        image: document.getElementById('image').value,
+        description: document.getElementById('desc').value
+    };
+    await fetch(`${API_URL}/api/products`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            "ngrok-skip-browser-warning": "true"
+        },
+        body: JSON.stringify(item)
+    });
+    location.reload(); // Страница обновится и покажет новый товар
+}
 
         async function del(id) {
             await fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE' });
@@ -72,3 +77,4 @@
 </body>
 
 </html>
+
