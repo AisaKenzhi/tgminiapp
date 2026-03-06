@@ -1,222 +1,275 @@
-import sqlite3, json, asyncio, uvicorn, sys
-from datetime import datetime
-from aiogram import Bot, Dispatcher, F, types
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, CallbackQuery
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vesto Bayer App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #F4F6F9; --card: #FFFFFF; --accent: #3A6DFF; --text-dark: #1E2335; --text-gray: #8A92A6; --radius-xl: 24px; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text-dark); margin: 0; padding: 0; padding-bottom: 90px; }
+        .page-title { font-size: 24px; font-weight: 800; padding: 20px 20px 10px; }
+        .view { display: none; padding: 0 20px; animation: fadeIn 0.3s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-BOT_TOKEN = "8234813143:AAG_u3jAUkn1eqsfiOKbRvP3qV0nBeY4q1U"
-ADMIN_IDS = [1551063019, 897844688]
-APP_URL = "https://tgminiapp-psi.vercel.app"
+        /* Категории */
+        .categories { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .categories::-webkit-scrollbar { display: none; }
+        .chip { background: var(--card); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--text-gray); cursor: pointer; border: 2px solid transparent; white-space: nowrap; }
+        .chip.active { background: rgba(58, 109, 255, 0.1); color: var(--accent); border-color: var(--accent); }
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 10px; position: relative; text-align: center; cursor: pointer; }
+        .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; }
+        .badge { position: absolute; top: 10px; left: 10px; background: #FF4B4B; color: white; padding: 4px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; z-index: 2; }
+        
+        .product-title { font-size: 13px; font-weight: 700; margin: 8px 0 4px; }
+        .product-price { color: var(--accent); font-weight: 800; font-size: 16px; }
 
-def get_db():
-    conn = sqlite3.connect("vesto_v7.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 16px; font-family: inherit; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: var(--accent); color: white; margin-top: 10px; }
 
-def init_db():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("""CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY, total_spent INTEGER DEFAULT 0, status TEXT DEFAULT 'Новичок')""")
-    cur.execute("""CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER, 
-        image_ids TEXT, description TEXT, category TEXT, badge TEXT)""")
-    cur.execute("""CREATE TABLE IF NOT EXISTS promocodes (
-        code TEXT PRIMARY KEY, discount INTEGER)""")
-    cur.execute("CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, items TEXT, total INTEGER, status TEXT DEFAULT 'Принят')")
-    cur.execute("CREATE TABLE IF NOT EXISTS wishlist (user_id INTEGER, product_id INTEGER, PRIMARY KEY(user_id, product_id))")
-    conn.commit()
-    conn.close()
+        .heart { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .heart.active { color: #FF4B4B; }
 
-init_db()
+        /* Профиль */
+        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; background: #ddd; object-fit: cover; }
 
-# --- FSM ---
-class AddProduct(StatesGroup):
-    name, photos, price, desc, category, badge = State(), State(), State(), State(), State(), State()
+        /* Модалка Товара */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; overflow-y: auto; padding-bottom: 90px; }
+        .modal-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; }
+        .modal-gallery img { width: 100%; height: 350px; object-fit: cover; scroll-snap-align: start; flex: 0 0 100%; }
+        .modal-close { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 20px; cursor: pointer; }
 
-class AddPromo(StatesGroup):
-    code, discount = State(), State()
+        /* Нижнее меню */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; font-weight: 600; }
+        .nav-item.active { color: var(--accent); }
+    </style>
+</head>
+<body>
 
-# --- БОТ ---
-@dp.message(Command("start"))
-async def cmd_start(m: Message):
-    conn = get_db()
-    conn.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (m.from_user.id,))
-    conn.commit()
-    conn.close()
+    <div id="view-store" class="view active">
+        <h1 class="page-title">Каталог</h1>
+        <div class="categories">
+            <div class="chip active" onclick="filterCat('Все', this)">Все</div>
+            <div class="chip" onclick="filterCat('Новинки', this)">⭐️ Новинки</div>
+            <div class="chip" onclick="filterCat('Топ продаж', this)">🔥 Топ продаж</div>
+            <div class="chip" onclick="filterCat('Малыши', this)">👶 Малыши</div>
+        </div>
+        <div class="grid" id="catalog-grid"></div>
+    </div>
+
+    <div id="view-profile" class="view">
+        <h1 class="page-title">Мой профиль</h1>
+        <div class="profile-header">
+            <img src="${tg.initDataUnsafe.user?.photo_url || 'https://via.placeholder.com/60'}" class="avatar">
+            <div>
+                <div style="font-size: 18px; font-weight: 800;">@<span id="tg-user">username</span></div>
+                <div style="font-size: 13px; color: var(--accent); font-weight: 700;">Статус: <span id="client-status">Новичок</span></div>
+            </div>
+        </div>
+        <div class="profile-header">
+            <div>
+                <div style="color: var(--text-gray); font-size: 12px;">Сумма покупок</div>
+                <div style="font-size: 20px; font-weight: 800;" id="total-spent">0 ₴</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-wishlist" class="view">
+        <h1 class="page-title">Избранное ❤️</h1>
+        <button class="btn btn-primary" style="margin-bottom: 15px;" onclick="shareWishlist()">📸 Поделиться в Сторис</button>
+        <div class="grid" id="wishlist-grid"></div>
+    </div>
+
+    <div id="view-cart" class="view">
+        <h1 class="page-title">Корзина 🛒</h1>
+        <div id="cart-list"></div>
+        <div id="cart-total-box" style="display:none; background: var(--card); padding: 20px; border-radius: 24px; margin-top: 20px;">
+            <input type="text" id="promo-input" placeholder="Промокод" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;">
+            <button class="btn btn-primary" style="background:#000; margin-bottom: 15px;" onclick="applyPromo()">Применить код</button>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 20px;">
+                <span>Итого:</span> <span id="cart-total-price">0 ₴</span>
+            </div>
+            <button class="btn btn-primary" onclick="sendOrder()">Оформить заказ</button>
+        </div>
+    </div>
+
+    <div id="product-modal" class="modal">
+        <div class="modal-close" onclick="closeModal()">×</div>
+        <div class="modal-gallery" id="modal-gallery"></div>
+        <div style="padding: 20px;">
+            <div id="modal-badge" class="badge" style="position:relative; display:inline-block; margin-bottom:10px; top:0; left:0;"></div>
+            <h2 id="modal-title" style="margin-bottom: 5px;"></h2>
+            <div id="modal-price" style="color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 15px;"></div>
+            <div style="color: var(--text-gray); font-size: 14px; line-height: 1.5; margin-bottom: 20px;" id="modal-desc"></div>
+            
+            <button class="btn btn-primary" id="modal-add-btn">В корзину</button>
+            <button class="btn" style="background: rgba(0,0,0,0.05); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('store', this)">🏠<br>Магазин</div>
+        <div class="nav-item" onclick="switchTab('profile', this)">👤<br>Профиль</div>
+        <div class="nav-item" onclick="switchTab('wishlist', this)">❤️<br>Избранное</div>
+        <div class="nav-item" onclick="switchTab('cart', this)">🛒<br>Корзина</div>
+    </div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
     
-    kb = types.ReplyKeyboardMarkup(
-        keyboard=[[types.KeyboardButton(text="🛍 Открыть Vesto Bayer", web_app=WebAppInfo(url=APP_URL))]],
-        resize_keyboard=True
-    )
-    await m.answer("Добро пожаловать в Vesto Bayer! Нажми кнопку ниже.", reply_markup=kb)
+    let store = { products: [], promos: {}, bot_username: "" };
+    let cart = [];
+    let currentCategory = 'Все';
+    let activePromoDiscount = 0;
 
-@dp.message(Command("admin"))
-async def cmd_admin(m: Message):
-    if m.from_user.id in ADMIN_IDS:
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="➕ Добавить товар", callback_data="add_p")],
-            [InlineKeyboardButton(text="🎟 Добавить промокод", callback_data="add_promo")]
-        ])
-        await m.answer("🍎 **Vesto Admin OS**", reply_markup=kb)
-
-# --- ДОБАВЛЕНИЕ ПРОМОКОДА ---
-@dp.callback_query(F.data == "add_promo")
-async def add_promo_start(call: CallbackQuery, state: FSMContext):
-    await call.message.answer("Введите ПРОМОКОД (например: SALE50):")
-    await state.set_state(AddPromo.code)
-
-@dp.message(AddPromo.code)
-async def add_promo_code(m: Message, state: FSMContext):
-    await state.update_data(code=m.text.upper())
-    await m.answer("Введите скидку в % (например: 15):")
-    await state.set_state(AddPromo.discount)
-
-@dp.message(AddPromo.discount)
-async def add_promo_disc(m: Message, state: FSMContext):
-    data = await state.get_data()
-    conn = get_db()
-    conn.execute("INSERT OR REPLACE INTO promocodes VALUES (?, ?)", (data['code'], int(m.text)))
-    conn.commit()
-    conn.close()
-    await m.answer(f"✅ Промокод {data['code']} на {m.text}% добавлен!")
-    await state.clear()
-
-# --- ДОБАВЛЕНИЕ ТОВАРА (с 5 фото, категорией и бейджем) ---
-@dp.callback_query(F.data == "add_p")
-async def add_p_start(call: CallbackQuery, state: FSMContext):
-    await state.update_data(photos=[])
-    await call.message.answer("Введите название товара:")
-    await state.set_state(AddProduct.name)
-
-@dp.message(AddProduct.name)
-async def add_p_name(m: Message, state: FSMContext):
-    await state.update_data(name=m.text)
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Фото добавлены", callback_data="finish_photos")]])
-    await m.answer("Отправьте до 5 фото (по одному). Как закончите, нажмите кнопку ниже.", reply_markup=kb)
-    await state.set_state(AddProduct.photos)
-
-@dp.message(AddProduct.photos, F.photo)
-async def add_p_photo(m: Message, state: FSMContext):
-    data = await state.get_data()
-    photos = data.get('photos', [])
-    if len(photos) < 5:
-        photos.append(m.photo[-1].file_id)
-        await state.update_data(photos=photos)
-        await m.answer(f"Фото добавлено ({len(photos)}/5). Шлите еще или жмите 'Фото добавлены' в сообщении выше.")
-    else:
-        await m.answer("Максимум 5 фото! Жмите 'Фото добавлены'.")
-
-@dp.callback_query(F.data == "finish_photos")
-async def add_p_price_start(call: CallbackQuery, state: FSMContext):
-    await call.message.answer("Введите ЦЕНУ (число):")
-    await state.set_state(AddProduct.price)
-
-@dp.message(AddProduct.price)
-async def add_p_price(m: Message, state: FSMContext):
-    await state.update_data(price=int(m.text))
-    await m.answer("Введите описание товара:")
-    await state.set_state(AddProduct.desc)
-
-@dp.message(AddProduct.desc)
-async def add_p_desc(m: Message, state: FSMContext):
-    await state.update_data(desc=m.text)
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⭐️ Новинки", callback_data="cat_Новинки")],
-        [InlineKeyboardButton(text="🔥 Топ продаж", callback_data="cat_Топ продаж")],
-        [InlineKeyboardButton(text="👶 Малыши", callback_data="cat_Малыши")]
-    ])
-    await m.answer("Выберите категорию:", reply_markup=kb)
-    await state.set_state(AddProduct.category)
-
-@dp.callback_query(AddProduct.category)
-async def add_p_cat(call: CallbackQuery, state: FSMContext):
-    await state.update_data(category=call.data.split('_')[1])
-    await call.message.answer("Введите бейдж (плашку), например 'Sale 50%'. Если не нужно, напишите '-'")
-    await state.set_state(AddProduct.badge)
-
-@dp.message(AddProduct.badge)
-async def add_p_badge(m: Message, state: FSMContext):
-    badge = "" if m.text == "-" else m.text
-    data = await state.get_data()
-    
-    conn = get_db()
-    conn.execute("INSERT INTO products (name, image_ids, price, description, category, badge) VALUES (?, ?, ?, ?, ?, ?)", 
-                 (data['name'], ",".join(data['photos']), data['price'], data['desc'], data['category'], badge))
-    conn.commit()
-    conn.close()
-    
-    await m.answer(f"✅ Товар добавлен!")
-    await state.clear()
-
-# --- ПРИЕМ ЗАКАЗА ---
-@dp.message(F.web_app_data)
-async def handle_webapp_data(m: Message):
-    data = json.loads(m.web_app_data.data)
-    admin_msg = f"🛍 **НОВЫЙ ЗАКАЗ**\n👤 @{m.from_user.username}\n📱 Товары: {data['items']}\n💰 Сумма (с учетом промо): {data['total']} ₴\n🎟 Промокод: {data.get('promo', 'Нет')}"
-    for aid in ADMIN_IDS:
-        try: await bot.send_message(aid, admin_msg)
-        except: pass
-
-# --- API ---
-class LikeData(BaseModel): user_id: int; product_id: int
-
-@app.get("/api/image/{file_id}")
-async def get_image(file_id: str):
-    try:
-        file_info = await bot.get_file(file_id)
-        return RedirectResponse(f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info.file_path}")
-    except: return RedirectResponse("https://via.placeholder.com/300?text=Error")
-
-@app.get("/api/init/{user_id}")
-async def api_init(user_id: int):
-    conn = get_db()
-    prods = [dict(r) for r in conn.execute("SELECT * FROM products").fetchall()]
-    user = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
-    wishlist = [r['product_id'] for r in conn.execute("SELECT product_id FROM wishlist WHERE user_id=?", (user_id,)).fetchall()]
-    promos = {r['code']: r['discount'] for r in conn.execute("SELECT * FROM promocodes").fetchall()}
-    conn.close()
-
-    for p in prods:
-        p['is_liked'] = p['id'] in wishlist
-
-    return {
-        "products": prods,
-        "user": dict(user) if user else {"status": "Новичок", "total_spent": 0},
-        "promos": promos,
-        "bot_username": "your_bot_username" # ЗАМЕНИ НА ЮЗЕРНЕЙМ СВОЕГО БОТА (БЕЗ @)
+    async function init() {
+        tg.expand();
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('tg-user').innerText = user?.username || user?.first_name || "Client";
+        
+        try {
+            const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`, { headers: {"ngrok-skip-browser-warning": "true"} });
+            store = await res.json();
+            
+            document.getElementById('client-status').innerText = store.user.status;
+            document.getElementById('total-spent').innerText = `${store.user.total_spent} ₴`;
+            
+            renderStore();
+        } catch(e) { tg.showAlert("Ошибка загрузки"); }
     }
 
-@app.post("/api/like")
-async def api_like(data: LikeData):
-    conn = get_db()
-    exists = conn.execute("SELECT 1 FROM wishlist WHERE user_id=? AND product_id=?", (data.user_id, data.product_id)).fetchone()
-    if exists: conn.execute("DELETE FROM wishlist WHERE user_id=? AND product_id=?", (data.user_id, data.product_id))
-    else: conn.execute("INSERT INTO wishlist VALUES (?, ?)", (data.user_id, data.product_id))
-    conn.commit()
-    conn.close()
-    return {"status": "ok"}
+    function switchTab(id, el) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(`view-${id}`).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        
+        if(id === 'wishlist') renderWishlist();
+        if(id === 'cart') renderCart();
+    }
 
-async def start_all():
-    asyncio.create_task(dp.start_polling(bot))
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000, loop="asyncio")
-    server = uvicorn.Server(config)
-    await server.serve()
+    function filterCat(cat, el) {
+        currentCategory = cat;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderStore();
+    }
 
-if __name__ == "__main__":
-    if sys.platform == 'win32': asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try: loop.run_until_complete(start_all())
-    except KeyboardInterrupt: pass
+    function renderStore() {
+        const prods = currentCategory === 'Все' ? store.products : store.products.filter(p => p.category === currentCategory);
+        document.getElementById('catalog-grid').innerHTML = prods.map(createCard).join('');
+    }
+
+    function renderWishlist() {
+        const liked = store.products.filter(p => p.is_liked);
+        document.getElementById('wishlist-grid').innerHTML = liked.map(createCard).join('');
+    }
+
+    function createCard(p) {
+        const img = p.image_ids ? `${API_URL}/api/image/${p.image_ids.split(',')[0]}` : "https://via.placeholder.com/300";
+        const badge = p.badge ? `<div class="badge">${p.badge}</div>` : '';
+        return `
+            <div class="product-card" onclick="openModal(${p.id})">
+                ${badge}
+                <div class="heart ${p.is_liked ? 'active' : ''}" onclick="event.stopPropagation(); toggleLike(${p.id}, this)">❤</div>
+                <img src="${img}" class="product-img">
+                <div class="product-title">${p.name}</div>
+                <div class="product-price">${p.price} ₴</div>
+            </div>
+        `;
+    }
+
+    function openModal(pid) {
+        const p = store.products.find(x => x.id === pid);
+        const images = p.image_ids ? p.image_ids.split(',') : [];
+        const galleryHtml = images.map(id => `<img src="${API_URL}/api/image/${id}">`).join('');
+        
+        document.getElementById('modal-gallery').innerHTML = galleryHtml || '<img src="https://via.placeholder.com/400">';
+        document.getElementById('modal-title').innerText = p.name;
+        document.getElementById('modal-price').innerText = `${p.price} ₴`;
+        document.getElementById('modal-desc').innerText = p.description || "Описание отсутствует";
+        
+        const badgeEl = document.getElementById('modal-badge');
+        if(p.badge) { badgeEl.style.display = 'inline-block'; badgeEl.innerText = p.badge; }
+        else { badgeEl.style.display = 'none'; }
+
+        document.getElementById('modal-add-btn').onclick = () => { addToCart(p); closeModal(); };
+        document.getElementById('modal-share-btn').onclick = () => {
+            const link = `https://t.me/${store.bot_username}?start=item_${p.id}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=Смотри какую вещь нашла в Vesto Bayer!`);
+        };
+
+        document.getElementById('product-modal').style.display = 'block';
+    }
+
+    function closeModal() { document.getElementById('product-modal').style.display = 'none'; }
+
+    async function toggleLike(pid, el) {
+        tg.HapticFeedback.impactOccurred('light');
+        const p = store.products.find(x => x.id === pid);
+        p.is_liked = !p.is_liked;
+        el.classList.toggle('active');
+        fetch(`${API_URL}/api/like`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: tg.initDataUnsafe.user?.id || 1551063019, product_id: pid})
+        });
+    }
+
+    function addToCart(p) { cart.push(p); tg.showAlert("Товар в корзине!"); }
+
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        const totalBox = document.getElementById('cart-total-box');
+        if(cart.length === 0) { list.innerHTML = "<div style='text-align:center; padding:20px;'>Корзина пуста</div>"; totalBox.style.display = "none"; return; }
+
+        list.innerHTML = cart.map((p, i) => `<div style="display:flex; gap:15px; margin-bottom:10px; background:white; padding:10px; border-radius:16px;">
+            <div style="flex-grow:1; font-weight:700;">${p.name} <br><span style="color:var(--accent);">${p.price} ₴</span></div>
+            <div onclick="cart.splice(${i},1); renderCart()" style="color:red; font-size:20px;">×</div>
+        </div>`).join('');
+        
+        totalBox.style.display = "block";
+        updateTotal();
+    }
+
+    function applyPromo() {
+        const code = document.getElementById('promo-input').value.toUpperCase();
+        if(store.promos[code]) {
+            activePromoDiscount = store.promos[code];
+            tg.showAlert(`Промокод применен! Скидка ${activePromoDiscount}%`);
+            updateTotal();
+        } else { tg.showAlert("Неверный промокод"); }
+    }
+
+    function updateTotal() {
+        let sum = cart.reduce((a, b) => a + b.price, 0);
+        let final = sum - (sum * (activePromoDiscount / 100));
+        document.getElementById('cart-total-price').innerText = `${Math.round(final)} ₴`;
+    }
+
+    function shareWishlist() {
+        const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
+        if(tg.shareToStory) {
+            tg.shareToStory("https://via.placeholder.com/1080x1920.png?text=My+Wishlist+Vesto", {text: "Смотри мой Wishlist в Vesto Bayer! " + link});
+        } else {
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=Мой Wishlist в Vesto Bayer!`);
+        }
+    }
+
+    function sendOrder() {
+        let sum = cart.reduce((a, b) => a + b.price, 0);
+        let final = Math.round(sum - (sum * (activePromoDiscount / 100)));
+        tg.sendData(JSON.stringify({ type: 'order', items: cart.map(i=>i.name).join(', '), total: final, promo: document.getElementById('promo-input').value }));
+        tg.close();
+    }
+
+    init();
+</script>
+</body>
+</html>
