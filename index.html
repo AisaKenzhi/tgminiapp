@@ -3,165 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vesto Bayer OS</title>
+    <title>Vesto Bayer App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #007aff; --text: #1c1c1e; --success: #34c759; }
-        @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1c1c1e; --text: #fff; } }
-        
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; overflow-x: hidden; }
-        
-        /* Bento Cards */
-        .bento-card { background: var(--card); border-radius: 28px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; position: relative; }
-        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        :root {
+            --bg: #F4F6F9; /* Очень светлый фон, как на фото */
+            --card: #FFFFFF;
+            --accent: #3A6DFF; /* Яркий синий для кнопок */
+            --accent-hover: #2a55d4;
+            --text-dark: #1E2335;
+            --text-gray: #8A92A6;
+            --shadow: 0 16px 32px rgba(58, 109, 255, 0.08); /* Мягкая синеватая тень */
+            --shadow-card: 0 10px 25px rgba(0,0,0,0.04);
+            --radius-xl: 32px;
+            --radius-btn: 50px; /* Кнопки-таблетки */
+        }
 
-        /* Галерея */
-        .gallery { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; scrollbar-width: none; margin-bottom: 15px; border-radius: 20px; }
-        .gallery img { flex: 0 0 100%; height: 180px; object-fit: cover; scroll-snap-align: start; border-radius: 20px; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 90px; /* Место под меню */
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        /* Apple Activity Ring */
-        .ring-box { display: flex; justify-content: space-between; align-items: center; }
-        .ring { position: relative; width: 60px; height: 60px; }
-        .ring svg { transform: rotate(-90deg); width: 60px; height: 60px; }
-        .ring circle { fill: none; stroke-width: 6; stroke-linecap: round; }
+        /* Заголовки */
+        h1, h2, h3 { margin: 0; color: var(--text-dark); }
+        .page-title { font-size: 24px; font-weight: 800; padding: 20px 20px 10px; }
+
+        /* Вкладки (Экраны) */
+        .view { display: none; padding: 0 20px; animation: fadeIn 0.3s ease-out; }
+        .view.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Категории (Chips) */
+        .categories { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .chip { background: var(--card); border: 2px solid transparent; padding: 8px 16px; border-radius: var(--radius-btn); font-size: 13px; font-weight: 600; color: var(--text-gray); white-space: nowrap; box-shadow: var(--shadow-card); cursor: pointer; transition: 0.2s; }
+        .chip.active { background: rgba(58, 109, 255, 0.1); color: var(--accent); border-color: var(--accent); }
+
+        /* Сетка товаров */
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+        /* Карточка товара */
+        .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 12px; box-shadow: var(--shadow-card); position: relative; text-align: center; }
+        .product-img { width: 100%; height: 120px; border-radius: 20px; object-fit: cover; margin-bottom: 10px; background: #f0f0f0; }
+        
+        .product-title { font-size: 14px; font-weight: 700; line-height: 1.2; margin-bottom: 5px; }
+        .product-stats { display: flex; justify-content: center; gap: 8px; font-size: 12px; color: var(--text-gray); font-weight: 600; margin-bottom: 12px; }
+        .product-price { color: var(--accent); font-weight: 800; }
 
         /* Кнопки */
-        .btn-primary { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; font-size: 15px; margin-top: 10px; cursor: pointer; }
-        .btn-secondary { width: 100%; background: rgba(0,122,255,0.1); color: var(--accent); border: none; padding: 12px; border-radius: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; }
-        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: var(--radius-btn); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 8px 20px rgba(58, 109, 255, 0.3); }
+        .btn-primary:active { transform: scale(0.95); background: var(--accent-hover); }
+        .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+
         /* Сердечко */
-        .heart { position: absolute; top: 15px; right: 15px; font-size: 24px; color: #ccc; z-index: 10; transition: 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .heart.active { color: #ff3b30; transform: scale(1.1); }
+        .heart { position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; z-index: 2; }
+        .heart.active { color: #FF4B4B; }
 
-        /* Анимация Успеха */
-        .success-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke-width: 3; stroke: var(--success); stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px var(--success); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
-        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px var(--success); } }
+        /* Профиль и Статистика */
+        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); box-shadow: var(--shadow-card); margin-bottom: 20px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #FF9A9E, #FECFEF); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-box { background: var(--card); padding: 15px; border-radius: 24px; box-shadow: var(--shadow-card); text-align: center; }
+        .stat-icon { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
 
-        .timeline { border-left: 2px solid var(--accent); margin-left: 5px; padding-left: 15px; font-size: 13px; }
-        .sleep-banner { background: #ff9500; color: white; padding: 12px; border-radius: 18px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 15px; display: none; }
+        /* Корзина */
+        .cart-item { display: flex; gap: 15px; background: var(--card); padding: 15px; border-radius: 24px; box-shadow: var(--shadow-card); margin-bottom: 15px; align-items: center; }
+        .cart-item img { width: 60px; height: 60px; border-radius: 15px; object-fit: cover; }
+        .cart-total-box { background: var(--accent); color: white; padding: 20px; border-radius: 30px; margin-top: 20px; box-shadow: var(--shadow); }
+
+        /* Нижнее меню (Tab Bar) */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 10px 25px; border-radius: 30px 30px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-gray); font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.3s; width: 60px; }
+        .nav-item .icon { font-size: 22px; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item.active .icon { transform: translateY(-3px); }
+
+        /* Timeline */
+        .timeline { padding-left: 15px; border-left: 2px solid var(--accent); }
+        .tl-item { position: relative; margin-bottom: 15px; font-size: 13px; font-weight: 600; }
+        .tl-item::before { content: ''; position: absolute; left: -21px; top: 4px; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; border: 3px solid var(--card); }
+
     </style>
 </head>
 <body>
 
-    <div id="sleep-banner" class="sleep-banner">🌙 Мы отдыхаем. Оставьте заявку, свяжемся утром!</div>
-
-    <div class="bento-card ring-box">
-        <div>
-            <div style="opacity: 0.6; font-size: 13px;">Кешбэк & Статус</div>
-            <div style="font-size: 22px; font-weight: 800;" id="balance">0 ₴</div>
-            <div style="font-size: 11px; color: var(--accent); margin-top: 5px;" onclick="copyRef()">🎁 Копировать реф-ссылку</div>
+    <div id="view-store" class="view active">
+        <h1 class="page-title">Каталог</h1>
+        
+        <div class="categories">
+            <div class="chip active">⭐️ Новинки</div>
+            <div class="chip">🔥 Топ продаж</div>
+            <div class="chip">👶 Малыши</div>
         </div>
-        <div class="ring">
-            <svg><circle cx="30" cy="30" r="26" stroke="#eee"></circle>
-            <circle cx="30" cy="30" r="26" stroke="var(--accent)" stroke-dasharray="163" stroke-dashoffset="60"></circle></svg>
-            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:11px; font-weight:bold;">VIP</div>
+
+        <div class="grid" id="catalog-grid">
+            </div>
+    </div>
+
+    <div id="view-profile" class="view">
+        <h1 class="page-title">Мой профиль</h1>
+        
+        <div class="profile-header">
+            <div class="avatar">👦</div>
+            <div>
+                <div style="font-size: 18px; font-weight: 800;" id="user-name">Vesto Client</div>
+                <div style="font-size: 12px; color: var(--text-gray); font-weight: 600;">Уровень лояльности: Базовый</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">💰</div>
+                <div style="font-size: 12px; color: var(--text-gray); font-weight: 600;">Мой Кешбэк</div>
+                <div style="font-size: 18px; font-weight: 800; color: #8B5CF6;" id="profile-balance">0 ₴</div>
+            </div>
+            <div class="stat-box" onclick="copyRef()">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">🎁</div>
+                <div style="font-size: 12px; color: var(--text-gray); font-weight: 600;">Пригласить</div>
+                <div style="font-size: 13px; font-weight: 800; color: #10B981; margin-top: 5px;">Получить бонус</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 15px;">Мой последний заказ</h3>
+        <div class="product-card" style="text-align: left; padding: 20px;">
+            <div id="timeline-box" class="timeline">
+                <div class="tl-item" style="color: var(--text-gray);">У вас пока нет заказов</div>
+            </div>
         </div>
     </div>
 
-    <div class="bento-card" id="timeline" style="display:none;">
-        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Ваш последний заказ</h3>
-        <div class="timeline" id="timeline-text">Ожидание...</div>
+    <div id="view-wishlist" class="view">
+        <h1 class="page-title">Избранное ❤️</h1>
+        <div class="grid" id="wishlist-grid"></div>
     </div>
 
-    <div class="bento-card" style="background: rgba(0,122,255,0.05);">
-        <h3 style="margin: 0 0 10px 0; font-size: 16px;">📏 Помощник по размерам</h3>
-        <input type="number" id="baby-height" placeholder="Рост ребенка (см)" oninput="calcSize()" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: none; background: var(--card); color: var(--text);">
-        <div id="size-res" style="margin-top: 10px; font-weight: 700; color: var(--accent); font-size: 14px;"></div>
+    <div id="view-cart" class="view">
+        <h1 class="page-title">Корзина 🛒</h1>
+        <div id="cart-list"></div>
+        
+        <div id="cart-empty" style="text-align:center; padding: 40px 20px; color: var(--text-gray); font-weight: 600;">
+            Корзина пуста. Загляните в магазин!
+        </div>
+
+        <div class="cart-total-box" id="cart-total-box" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="font-weight: 600;">Итого:</span>
+                <span style="font-size: 24px; font-weight: 800;" id="cart-total-price">0 ₴</span>
+            </div>
+            <button class="btn" style="background: white; color: var(--accent);" onclick="sendOrder()">Оформить заявку</button>
+            <div style="font-size: 11px; text-align: center; margin-top: 10px; opacity: 0.8;">Менеджер свяжется для подтверждения</div>
+        </div>
     </div>
 
-    <div class="bento-grid" id="catalog"></div>
-
-    <div class="success-overlay" id="success-anim">
-        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle cx="26" cy="26" r="25" fill="none"/><path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-        </svg>
-        <h2 style="color:var(--success); margin-top:20px;">Заявка отправлена!</h2>
-        <p style="opacity:0.7;">Менеджер свяжется с вами</p>
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('store', this)">
+            <span class="icon">🏠</span><span>Магазин</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('profile', this)">
+            <span class="icon">👤</span><span>Профиль</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('wishlist', this)">
+            <span class="icon">❤️</span><span>Избранное</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('cart', this)">
+            <span class="icon">🛒</span><span>Корзина</span>
+        </div>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    // ВСТАВЬ СЮДА СВОЙ NGROK:
+    // СЮДА ВСТАВЬ СВОЮ ССЫЛКУ NGROK / VERCEL:
     const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
     
-    let store = { ref_link: "" };
+    let store = { products: [], ref_link: "", history: [] };
+    let cart = [];
 
     async function init() {
         tg.expand();
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || "Vesto Client";
         const uid = tg.initDataUnsafe.user?.id || 1551063019;
         
         try {
             const res = await fetch(`${API_URL}/api/init/${uid}`, { headers: {"ngrok-skip-browser-warning": "true"} });
             const data = await res.json();
             
-            store.ref_link = data.ref_link;
-            document.getElementById('balance').innerText = `${data.user.balance} ₴`;
-            if(!data.is_open) document.getElementById('sleep-banner').style.display = 'block';
-
-            if(data.history.length > 0) {
-                document.getElementById('timeline').style.display = 'block';
-                document.getElementById('timeline-text').innerText = `Статус: ${data.history[0].status}`;
+            store = data;
+            document.getElementById('profile-balance').innerText = `${data.user.balance} ₴`;
+            
+            if(data.history && data.history.length > 0) {
+                document.getElementById('timeline-box').innerHTML = `<div class="tl-item">Статус: ${data.history[0].status}</div>`;
             }
 
-            render(data.products);
-        } catch(e) { tg.showAlert("Ошибка подключения к серверу"); }
+            renderStore();
+        } catch(e) { tg.showAlert("Ошибка загрузки данных"); }
     }
 
-    function render(products) {
-        document.getElementById('catalog').innerHTML = products.map(p => `
-            <div class="bento-card" style="grid-column: span 2; padding: 15px;">
-                <div class="heart ${p.is_liked ? 'active' : ''}" onclick="toggleLike(${p.id}, this)">❤</div>
-                <div class="gallery">
-                    <img src="https://via.placeholder.com/400x300?text=Vesto+Bayer+Item">
-                    <img src="https://via.placeholder.com/400x300?text=Detail+View">
-                </div>
-                <div style="font-size: 18px; font-weight: 800;">${p.name}</div>
-                <div style="font-size: 22px; font-weight: 900; color: var(--accent); margin-top: 5px;">${p.price} ₴</div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-secondary" onclick="order('help', ${p.id})">💡 Спросить стилиста</button>
-                    <button class="btn-primary" onclick="order('order', ${p.id})">🛍 Заказать</button>
-                </div>
-                <div style="text-align:center; font-size:11px; opacity:0.5; margin-top:10px;">Без предоплаты. Менеджер уточнит детали.</div>
-            </div>
-        `).join('');
-    }
-
-    async function toggleLike(pid, el) {
-        const uid = tg.initDataUnsafe.user?.id || 1551063019;
+    // --- Логика Вкладок ---
+    function switchTab(tabId, el) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(`view-${tabId}`).classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+
+        if(tabId === 'store') renderStore();
+        if(tabId === 'wishlist') renderWishlist();
+        if(tabId === 'cart') renderCart();
+    }
+
+    // --- Рендер экранов ---
+    function createProductCard(p) {
+        return `
+            <div class="product-card">
+                <div class="heart ${p.is_liked ? 'active' : '🤍'}" onclick="toggleLike(${p.id}, this)">${p.is_liked ? '❤' : '🤍'}</div>
+                <img src="https://via.placeholder.com/300?text=Vesto" class="product-img">
+                <div class="product-title">${p.name}</div>
+                <div class="product-stats">
+                    <span>🔥 Хит</span> 
+                    <span class="product-price">${p.price} ₴</span>
+                </div>
+                <button class="btn btn-primary" onclick="addToCart(${p.id})">В корзину</button>
+            </div>
+        `;
+    }
+
+    function renderStore() {
+        document.getElementById('catalog-grid').innerHTML = store.products.map(createProductCard).join('');
+    }
+
+    function renderWishlist() {
+        const liked = store.products.filter(p => p.is_liked);
+        document.getElementById('wishlist-grid').innerHTML = liked.length > 0 ? liked.map(createProductCard).join('') : "<div style='grid-column: span 2; text-align:center; padding: 20px; color:#8A92A6;'>Список пуст</div>";
+    }
+
+    // --- Корзина ---
+    function addToCart(pid) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        const product = store.products.find(x => x.id === pid);
+        cart.push(product);
+        tg.showAlert(`✅ ${product.name} добавлен в корзину!`);
+    }
+
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        const empty = document.getElementById('cart-empty');
+        const totalBox = document.getElementById('cart-total-box');
+
+        if(cart.length === 0) {
+            list.innerHTML = "";
+            empty.style.display = "block";
+            totalBox.style.display = "none";
+            return;
+        }
+
+        empty.style.display = "none";
+        totalBox.style.display = "block";
+        
+        let total = 0;
+        list.innerHTML = cart.map((p, index) => {
+            total += p.price;
+            return `
+                <div class="cart-item">
+                    <img src="https://via.placeholder.com/100">
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 700; font-size: 14px;">${p.name}</div>
+                        <div style="color: var(--accent); font-weight: 800; font-size: 16px;">${p.price} ₴</div>
+                    </div>
+                    <div style="color: #FF4B4B; font-size: 20px; cursor: pointer; padding: 10px;" onclick="removeFromCart(${index})">×</div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('cart-total-price').innerText = `${total} ₴`;
+    }
+
+    function removeFromCart(index) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        cart.splice(index, 1);
+        renderCart();
+    }
+
+    // --- Взаимодействие с API ---
+    async function toggleLike(pid, el) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        const p = store.products.find(x => x.id === pid);
+        p.is_liked = !p.is_liked;
         el.classList.toggle('active');
+        el.innerText = p.is_liked ? '❤' : '🤍';
+        
         await fetch(`${API_URL}/api/like`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({user_id: uid, product_id: pid})
+            body: JSON.stringify({user_id: tg.initDataUnsafe.user?.id || 1551063019, product_id: pid})
         });
     }
 
-    function order(type, pid) {
+    function sendOrder() {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        document.getElementById('success-anim').style.display = 'flex';
+        
+        let totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
+        let itemsString = cart.map(i => i.name).join(", ");
         
         tg.sendData(JSON.stringify({
-            type: type, items: pid,
-            customer: { name: tg.initDataUnsafe.user?.first_name || "Клиент", phone: "Запросит менеджер" },
-            total: 0 // Цена обсуждается с менеджером
+            type: 'order', 
+            items: itemsString, // Отправляем строку с названиями для админа
+            customer: { name: tg.initDataUnsafe.user?.first_name || "Клиент", phone: "Уточнить в ЛС" },
+            total: totalAmount
         }));
 
-        setTimeout(() => tg.close(), 2500);
-    }
-
-    function calcSize() {
-        const h = document.getElementById('baby-height').value;
-        let s = "Введите рост";
-        if(h>0 && h<56) s = "Размер 50-56 (0-1 мес)";
-        else if(h>=56 && h<68) s = "Размер 62-68 (3-6 мес)";
-        else if(h>=68) s = "Размер 74+";
-        document.getElementById('size-res').innerText = s;
+        cart = []; // очищаем корзину
+        setTimeout(() => tg.close(), 1500);
     }
 
     function copyRef() {
         navigator.clipboard.writeText(store.ref_link);
-        tg.showAlert("Реферальная ссылка скопирована!");
+        tg.showAlert("🎁 Реферальная ссылка скопирована! Отправьте её друзьям.");
     }
 
     init();
