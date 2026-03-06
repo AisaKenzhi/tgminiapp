@@ -3,117 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vesto Bayer Premium</title>
+    <title>Vesto Bayer OS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #007aff; --success: #34c759; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 120px; }
+        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #007aff; --text: #1c1c1e; --success: #34c759; }
+        @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1c1c1e; --text: #fff; } }
+        
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; overflow-x: hidden; }
+        
+        /* Bento Cards */
+        .bento-card { background: var(--card); border-radius: 28px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; position: relative; }
+        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
-        /* Галерея изображений */
-        .gallery { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; margin-bottom: 15px; scrollbar-width: none; }
-        .gallery img { flex: 0 0 100%; height: 250px; object-fit: cover; border-radius: 24px; scroll-snap-align: start; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        /* Галерея */
+        .gallery { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; scrollbar-width: none; margin-bottom: 15px; border-radius: 20px; }
+        .gallery img { flex: 0 0 100%; height: 180px; object-fit: cover; scroll-snap-align: start; border-radius: 20px; }
 
-        /* Таймлайн заказа */
-        .timeline { border-left: 2px solid var(--accent); margin-left: 10px; padding-left: 20px; }
-        .timeline-item { position: relative; margin-bottom: 20px; font-size: 13px; }
-        .timeline-item::before { content: ''; position: absolute; left: -27px; top: 3px; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; }
+        /* Apple Activity Ring */
+        .ring-box { display: flex; justify-content: space-between; align-items: center; }
+        .ring { position: relative; width: 60px; height: 60px; }
+        .ring svg { transform: rotate(-90deg); width: 60px; height: 60px; }
+        .ring circle { fill: none; stroke-width: 6; stroke-linecap: round; }
 
-        /* Bento блоки */
-        .bento-card { background: var(--card); border-radius: 28px; padding: 20px; box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff; margin-bottom: 20px; }
-
-        /* Кнопки стилиста */
-        .stylist-btn { border: 2px solid var(--accent); background: none; color: var(--accent); padding: 12px; border-radius: 18px; width: 100%; font-weight: 700; margin-top: 10px; }
-
-        /* Режим сна */
-        .sleep-banner { background: #ff9500; color: white; padding: 10px; border-radius: 15px; font-size: 12px; text-align: center; margin-bottom: 20px; display: none; }
+        /* Кнопки */
+        .btn-primary { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; font-size: 15px; margin-top: 10px; cursor: pointer; }
+        .btn-secondary { width: 100%; background: rgba(0,122,255,0.1); color: var(--accent); border: none; padding: 12px; border-radius: 16px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+        
+        /* Сердечко */
+        .heart { position: absolute; top: 15px; right: 15px; font-size: 24px; color: #ccc; z-index: 10; transition: 0.3s; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .heart.active { color: #ff3b30; transform: scale(1.1); }
 
         /* Анимация Успеха */
-        .success-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
-        .checkmark { width: 100px; height: 100px; border-radius: 50%; display: block; stroke-width: 2; stroke: var(--success); stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px var(--success); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
-
+        .success-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .checkmark { width: 80px; height: 80px; border-radius: 50%; stroke-width: 3; stroke: var(--success); stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px var(--success); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
         @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px var(--success); } }
+
+        .timeline { border-left: 2px solid var(--accent); margin-left: 5px; padding-left: 15px; font-size: 13px; }
+        .sleep-banner { background: #ff9500; color: white; padding: 12px; border-radius: 18px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="sleep-banner" class="sleep-banner">🌙 Мы отдыхаем, но вы можете оставить заявку — ответим утром!</div>
+    <div id="sleep-banner" class="sleep-banner">🌙 Мы отдыхаем. Оставьте заявку, свяжемся утром!</div>
 
-    <div class="bento-card" id="timeline-box" style="display:none;">
-        <h4 style="margin:0 0 15px 0;">Статус заказа №<span id="order-num"></span></h4>
-        <div class="timeline" id="timeline-list">
-            </div>
+    <div class="bento-card ring-box">
+        <div>
+            <div style="opacity: 0.6; font-size: 13px;">Кешбэк & Статус</div>
+            <div style="font-size: 22px; font-weight: 800;" id="balance">0 ₴</div>
+            <div style="font-size: 11px; color: var(--accent); margin-top: 5px;" onclick="copyRef()">🎁 Копировать реф-ссылку</div>
+        </div>
+        <div class="ring">
+            <svg><circle cx="30" cy="30" r="26" stroke="#eee"></circle>
+            <circle cx="30" cy="30" r="26" stroke="var(--accent)" stroke-dasharray="163" stroke-dashoffset="60"></circle></svg>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:11px; font-weight:bold;">VIP</div>
+        </div>
     </div>
 
-    <div id="catalog-grid">
-        </div>
+    <div class="bento-card" id="timeline" style="display:none;">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px;">Ваш последний заказ</h3>
+        <div class="timeline" id="timeline-text">Ожидание...</div>
+    </div>
+
+    <div class="bento-card" style="background: rgba(0,122,255,0.05);">
+        <h3 style="margin: 0 0 10px 0; font-size: 16px;">📏 Помощник по размерам</h3>
+        <input type="number" id="baby-height" placeholder="Рост ребенка (см)" oninput="calcSize()" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: none; background: var(--card); color: var(--text);">
+        <div id="size-res" style="margin-top: 10px; font-weight: 700; color: var(--accent); font-size: 14px;"></div>
+    </div>
+
+    <div class="bento-grid" id="catalog"></div>
 
     <div class="success-overlay" id="success-anim">
         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            <circle cx="26" cy="26" r="25" fill="none"/><path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
         </svg>
-        <h2 style="color:var(--success); margin-top:20px;">Готово!</h2>
-        <p>Менеджер уже спешит к вам</p>
+        <h2 style="color:var(--success); margin-top:20px;">Заявка отправлена!</h2>
+        <p style="opacity:0.7;">Менеджер свяжется с вами</p>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API = "https://unpendant-meteorically-felipe.ngrok-free.dev";
+    // ВСТАВЬ СЮДА СВОЙ NGROK:
+    const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
+    
+    let store = { ref_link: "" };
 
     async function init() {
+        tg.expand();
         const uid = tg.initDataUnsafe.user?.id || 1551063019;
-        const res = await fetch(`${API}/api/init/${uid}`);
-        const data = await res.json();
         
-        // Рабочие часы
-        if(!data.is_open) document.getElementById('sleep-banner').style.display = 'block';
+        try {
+            const res = await fetch(`${API_URL}/api/init/${uid}`, { headers: {"ngrok-skip-browser-warning": "true"} });
+            const data = await res.json();
+            
+            store.ref_link = data.ref_link;
+            document.getElementById('balance').innerText = `${data.user.balance} ₴`;
+            if(!data.is_open) document.getElementById('sleep-banner').style.display = 'block';
 
-        // Рендер таймлайна, если есть заказы
-        if(data.history.length > 0) {
-            document.getElementById('timeline-box').style.display = 'block';
-            document.getElementById('order-num').innerText = data.history[0].id;
-            const stages = ['Заявка принята', 'Стилист подбирает размер', 'Ожидание оплаты', 'Отправлено'];
-            document.getElementById('timeline-list').innerHTML = stages.map(s => `<div class="timeline-item">${s}</div>`).join('');
-        }
+            if(data.history.length > 0) {
+                document.getElementById('timeline').style.display = 'block';
+                document.getElementById('timeline-text').innerText = `Статус: ${data.history[0].status}`;
+            }
 
-        // Рендер каталога с галереей
-        const grid = document.getElementById('catalog-grid');
-        grid.innerHTML = data.products.map(p => `
-            <div class="bento-card">
+            render(data.products);
+        } catch(e) { tg.showAlert("Ошибка подключения к серверу"); }
+    }
+
+    function render(products) {
+        document.getElementById('catalog').innerHTML = products.map(p => `
+            <div class="bento-card" style="grid-column: span 2; padding: 15px;">
+                <div class="heart ${p.is_liked ? 'active' : ''}" onclick="toggleLike(${p.id}, this)">❤</div>
                 <div class="gallery">
-                    <img src="https://via.placeholder.com/300">
-                    <img src="https://via.placeholder.com/300">
+                    <img src="https://via.placeholder.com/400x300?text=Vesto+Bayer+Item">
+                    <img src="https://via.placeholder.com/400x300?text=Detail+View">
                 </div>
-                <h3>${p.name}</h3>
-                <div style="font-size:24px; font-weight:800; color:var(--accent);">${p.price} ₴</div>
-                <button class="stylist-btn" onclick="sendRequest('help', ${p.id})">💡 Помощь стилиста</button>
-                <button onclick="sendRequest('order', ${p.id})" style="width:100%; background:var(--accent); color:white; border:none; padding:15px; border-radius:18px; margin-top:10px; font-weight:700;">🛍 Заказать</button>
+                <div style="font-size: 18px; font-weight: 800;">${p.name}</div>
+                <div style="font-size: 22px; font-weight: 900; color: var(--accent); margin-top: 5px;">${p.price} ₴</div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-secondary" onclick="order('help', ${p.id})">💡 Спросить стилиста</button>
+                    <button class="btn-primary" onclick="order('order', ${p.id})">🛍 Заказать</button>
+                </div>
+                <div style="text-align:center; font-size:11px; opacity:0.5; margin-top:10px;">Без предоплаты. Менеджер уточнит детали.</div>
             </div>
         `).join('');
     }
 
-    async function sendRequest(type, pid) {
+    async function toggleLike(pid, el) {
+        const uid = tg.initDataUnsafe.user?.id || 1551063019;
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        el.classList.toggle('active');
+        await fetch(`${API_URL}/api/like`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: uid, product_id: pid})
+        });
+    }
+
+    function order(type, pid) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        
-        // Показ анимации успеха
         document.getElementById('success-anim').style.display = 'flex';
         
-        const payload = {
-            type: type,
-            items: pid,
-            customer: { name: tg.initDataUnsafe.user?.first_name, phone: "+380..." },
-            total: 1200
-        };
-        
-        tg.sendData(JSON.stringify(payload));
-        
-        setTimeout(() => {
-            document.getElementById('success-anim').style.display = 'none';
-        }, 3000);
+        tg.sendData(JSON.stringify({
+            type: type, items: pid,
+            customer: { name: tg.initDataUnsafe.user?.first_name || "Клиент", phone: "Запросит менеджер" },
+            total: 0 // Цена обсуждается с менеджером
+        }));
+
+        setTimeout(() => tg.close(), 2500);
+    }
+
+    function calcSize() {
+        const h = document.getElementById('baby-height').value;
+        let s = "Введите рост";
+        if(h>0 && h<56) s = "Размер 50-56 (0-1 мес)";
+        else if(h>=56 && h<68) s = "Размер 62-68 (3-6 мес)";
+        else if(h>=68) s = "Размер 74+";
+        document.getElementById('size-res').innerText = s;
+    }
+
+    function copyRef() {
+        navigator.clipboard.writeText(store.ref_link);
+        tg.showAlert("Реферальная ссылка скопирована!");
     }
 
     init();
 </script>
 </body>
-
 </html>
