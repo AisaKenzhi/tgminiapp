@@ -3,368 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Детская Одежда</title>
+    <title>Vesto Bayer Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #f8f9fa; --text-color: #1f2937; --card-bg: #ffffff;
-            --primary-color: #3b82f6; --accent-color: #f472b6;
-            --gray-light: #f3f4f6; --gray-text: #6b7280;
-        }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 16px; padding-bottom: 90px; }
-        
-        /* Поиск и Категории */
-        .search-bar { width: 100%; padding: 12px 16px; border: none; border-radius: 12px; background: var(--card-bg); margin-bottom: 12px; font-size: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .search-bar:focus { outline: 2px solid var(--primary-color); }
-        
-        .categories { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; padding-bottom: 4px; scroll-scrollbar-width: none; }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-chip { padding: 8px 16px; background: var(--card-bg); border-radius: 20px; font-size: 14px; white-space: nowrap; cursor: pointer; color: var(--gray-text); border: 1px solid transparent; transition: 0.2s; }
-        .cat-chip.active { background: var(--primary-color); color: white; }
+        :root { --bg: #f2f2f7; --card: #ffffff; --accent: #007aff; --success: #34c759; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 120px; }
 
-        /* Каталог */
-        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .product-card { background: var(--card-bg); border-radius: 20px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; flex-direction: column; cursor: pointer; }
-        .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; margin-bottom: 8px; }
-        .product-title { font-size: 14px; font-weight: 600; margin: 0 0 4px 0; }
-        .product-price { font-size: 16px; font-weight: 700; color: var(--primary-color); margin-bottom: 8px; }
+        /* Галерея изображений */
+        .gallery { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; margin-bottom: 15px; scrollbar-width: none; }
+        .gallery img { flex: 0 0 100%; height: 250px; object-fit: cover; border-radius: 24px; scroll-snap-align: start; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
 
-        .btn { background: var(--accent-color); color: white; border: none; border-radius: 12px; padding: 10px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; }
-        .btn:active { opacity: 0.8; transform: scale(0.98); }
-        
-        .qty-controls { display: flex; justify-content: space-between; align-items: center; background: var(--gray-light); border-radius: 12px; padding: 4px; }
-        .qty-btn { background: white; border: none; width: 28px; height: 28px; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; }
-        .qty-btn:active { background: var(--gray-light); }
+        /* Таймлайн заказа */
+        .timeline { border-left: 2px solid var(--accent); margin-left: 10px; padding-left: 20px; }
+        .timeline-item { position: relative; margin-bottom: 20px; font-size: 13px; }
+        .timeline-item::before { content: ''; position: absolute; left: -27px; top: 3px; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; }
 
-        /* Плавающая кнопка корзины */
-        .floating-cart { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; padding: 14px 24px; border-radius: 30px; font-weight: 600; box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3); z-index: 10; display: flex; gap: 8px; transition: 0.3s; cursor: pointer; }
-        .floating-cart.hidden { transform: translate(-50%, 150px); }
+        /* Bento блоки */
+        .bento-card { background: var(--card); border-radius: 28px; padding: 20px; box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff; margin-bottom: 20px; }
 
-        /* Модальные окна */
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 20; padding: 20px; transform: translateY(100%); transition: 0.3s ease-in-out; display: flex; flex-direction: column; overflow-y: auto; }
-        .modal.active { transform: translateY(0); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .close-btn { background: none; border: none; font-size: 24px; color: var(--gray-text); cursor: pointer; }
+        /* Кнопки стилиста */
+        .stylist-btn { border: 2px solid var(--accent); background: none; color: var(--accent); padding: 12px; border-radius: 18px; width: 100%; font-weight: 700; margin-top: 10px; }
 
-        /* Карусель */
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin-bottom: 16px; padding-bottom: 10px; }
-        .carousel img { width: 90%; height: 300px; object-fit: cover; flex-shrink: 0; scroll-snap-align: center; border-radius: 16px; }
-        .desc-block { background: var(--card-bg); padding: 16px; border-radius: 16px; margin-bottom: 16px; }
-        .badge { background: var(--gray-light); padding: 4px 8px; border-radius: 6px; font-size: 12px; display: inline-block; margin-right: 4px; margin-bottom: 4px;}
+        /* Режим сна */
+        .sleep-banner { background: #ff9500; color: white; padding: 10px; border-radius: 15px; font-size: 12px; text-align: center; margin-bottom: 20px; display: none; }
 
-        /* Форма заказа и корзина */
-        .cart-item { display: flex; align-items: center; background: var(--card-bg); padding: 12px; border-radius: 16px; margin-bottom: 12px; }
-        .cart-item img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; margin-right: 12px; }
-        .cart-item-info { flex-grow: 1; }
-        
-        .checkout-form { background: var(--card-bg); padding: 16px; border-radius: 16px; margin-top: 16px; }
-        .form-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 12px; font-size: 15px; background: var(--gray-light); }
-        .promo-block { display: flex; gap: 8px; margin-bottom: 12px; }
-        .promo-block input { margin-bottom: 0; flex-grow: 1; }
-        .promo-btn { background: var(--text-color); color: white; border: none; border-radius: 10px; padding: 0 16px; cursor: pointer; font-weight: bold; }
-        .total-price { font-size: 18px; font-weight: bold; text-align: right; margin-top: 10px; }
-        .discount { color: #10b981; font-size: 14px; text-align: right; }
-        
-        /* Лоадер */
-        .loader { text-align: center; color: var(--gray-text); grid-column: span 2; padding: 40px 0; font-size: 16px; }
+        /* Анимация Успеха */
+        .success-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .checkmark { width: 100px; height: 100px; border-radius: 50%; display: block; stroke-width: 2; stroke: var(--success); stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px var(--success); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px var(--success); } }
     </style>
 </head>
 <body>
 
-    <input type="text" id="search-input" class="search-bar" placeholder="🔍 Поиск товаров..." oninput="renderProducts()">
-    
-    <div class="categories">
-        <div class="cat-chip active" onclick="setCategory('all', this)">Все</div>
-        <div class="cat-chip" onclick="setCategory('baby', this)">👶 Малышам</div>
-        <div class="cat-chip" onclick="setCategory('girls', this)">👧 Девочкам</div>
-        <div class="cat-chip" onclick="setCategory('boys', this)">👦 Мальчикам</div>
-    </div>
+    <div id="sleep-banner" class="sleep-banner">🌙 Мы отдыхаем, но вы можете оставить заявку — ответим утром!</div>
 
-    <div class="products-grid" id="products">
-        <div class="loader">⏳ Загрузка товаров с сервера...</div>
-    </div>
-
-    <div class="floating-cart hidden" id="floating-cart" onclick="toggleModal('cart-modal', true)">
-        🛍️ Корзина <span id="cart-badge">• 0 ₴</span>
-    </div>
-
-    <div class="modal" id="product-modal">
-        <div class="modal-header">
-            <h2 id="pm-title">Товар</h2>
-            <button class="close-btn" onclick="toggleModal('product-modal', false)">✕</button>
-        </div>
-        <div id="pm-content"></div>
-    </div>
-
-    <div class="modal" id="cart-modal">
-        <div class="modal-header">
-            <h2>Ваш заказ</h2>
-            <button class="close-btn" onclick="toggleModal('cart-modal', false)">✕</button>
-        </div>
-        <div id="cart-items"></div>
-        
-        <div class="checkout-form" id="checkout-form" style="display: none;">
-            <div class="promo-block">
-                <input type="text" id="promo-input" class="form-input" placeholder="Промокод (напр. KROHA10)">
-                <button class="promo-btn" onclick="applyPromo()">Применить</button>
+    <div class="bento-card" id="timeline-box" style="display:none;">
+        <h4 style="margin:0 0 15px 0;">Статус заказа №<span id="order-num"></span></h4>
+        <div class="timeline" id="timeline-list">
             </div>
-            <div id="price-summary" class="total-price"></div>
-
-            <h3 style="margin-top:16px; font-size: 16px;">Данные для доставки</h3>
-            <input type="text" id="order-name" class="form-input" placeholder="Ваше имя" onchange="saveData()">
-            <input type="tel" id="order-phone" class="form-input" placeholder="Номер телефона" onchange="saveData()">
-            <input type="text" id="order-address" class="form-input" placeholder="Адрес доставки" onchange="saveData()">
-        </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <div id="catalog-grid">
+        </div>
 
-        // --- НАСТРОЙКИ СЕРВЕРА ---
-        // ⚠️ ВАЖНО: Вставь сюда ссылку, которую выдаст ngrok в терминале (без слеша на конце!)
-        // Пример: "https://1234-56-78.ngrok-free.app"
-        const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev";
+    <div class="success-overlay" id="success-anim">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+        <h2 style="color:var(--success); margin-top:20px;">Готово!</h2>
+        <p>Менеджер уже спешит к вам</p>
+    </div>
 
-        let products = [];
-        let cart = {};
-        let activeModal = null;
-        let currentCat = 'all';
-        let discountMultiplier = 1; 
+<script>
+    const tg = window.Telegram.WebApp;
+    const API = "https://unpendant-meteorically-felipe.ngrok-free.dev ";
 
-        // Вибрация
-        function haptic() {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    async function init() {
+        const uid = tg.initDataUnsafe.user?.id || 1551063019;
+        const res = await fetch(`${API}/api/init/${uid}`);
+        const data = await res.json();
+        
+        // Рабочие часы
+        if(!data.is_open) document.getElementById('sleep-banner').style.display = 'block';
+
+        // Рендер таймлайна, если есть заказы
+        if(data.history.length > 0) {
+            document.getElementById('timeline-box').style.display = 'block';
+            document.getElementById('order-num').innerText = data.history[0].id;
+            const stages = ['Заявка принята', 'Стилист подбирает размер', 'Ожидание оплаты', 'Отправлено'];
+            document.getElementById('timeline-list').innerHTML = stages.map(s => `<div class="timeline-item">${s}</div>`).join('');
         }
 
-        // Загрузка сохраненных данных
-        document.getElementById('order-name').value = localStorage.getItem('kroha_name') || '';
-        document.getElementById('order-phone').value = localStorage.getItem('kroha_phone') || '';
-        document.getElementById('order-address').value = localStorage.getItem('kroha_addr') || '';
-
-        function saveData() {
-            localStorage.setItem('kroha_name', document.getElementById('order-name').value);
-            localStorage.setItem('kroha_phone', document.getElementById('order-phone').value);
-            localStorage.setItem('kroha_addr', document.getElementById('order-address').value);
-        }
-
-        // --- ЗАГРУЗКА ТОВАРОВ ИЗ БАЗЫ ДАННЫХ (FastAPI) ---
-        async function loadProducts() {
-    try {
-        const response = await fetch(`${API_URL}/api/products`, {
-            headers: {
-                "ngrok-skip-browser-warning": "true" // Пропускаем проверку ngrok
-            }
-        });
-        if (!response.ok) throw new Error("Ошибка");
-        products = await response.json();
-        renderProducts();
-    } catch (error) {
-        console.error("Ошибка загрузки:", error);
-        document.getElementById('products').innerHTML = '<div class="loader">⚠️ Ошибка подключения. Нажми "Visit Site" по ссылке ngrok!</div>';
-    }
-}
-
-        function setCategory(cat, element) {
-            haptic();
-            currentCat = cat;
-            document.querySelectorAll('.cat-chip').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            renderProducts();
-        }
-
-        function applyPromo() {
-            haptic();
-            const code = document.getElementById('promo-input').value.toUpperCase();
-            if (code === 'KROHA10') {
-                discountMultiplier = 0.9;
-                if (tg.showAlert) tg.showAlert("Скидка 10% применена!");
-            } else {
-                discountMultiplier = 1;
-                if (tg.showAlert) tg.showAlert("Неверный промокод");
-            }
-            updateCartUI();
-        }
-
-        function renderProducts() {
-            const container = document.getElementById('products');
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            container.innerHTML = '';
-
-            let filtered = products.filter(p => {
-                const matchCat = currentCat === 'all' || p.cat === currentCat;
-                const matchSearch = p.name.toLowerCase().includes(searchQuery);
-                return matchCat && matchSearch;
-            });
-
-            if(filtered.length === 0) {
-                container.innerHTML = '<p style="grid-column: span 2; text-align: center; color: var(--gray-text);">Ничего не найдено 😔</p>';
-                return;
-            }
-
-            filtered.forEach(p => {
-                const qty = cart[p.id] || 0;
-                container.innerHTML += `
-                    <div class="product-card" onclick="openProduct(${p.id})">
-                        <img src="${p.images[0]}" class="product-img">
-                        <h3 class="product-title">${p.name}</h3>
-                        <div class="product-price">${p.price} ₴</div>
-                        ${qty === 0 ? 
-                            `<button class="btn" onclick="event.stopPropagation(); updateCart(${p.id}, 1)">В корзину</button>` : 
-                            `<div class="qty-controls" onclick="event.stopPropagation();">
-                                <button class="qty-btn" onclick="updateCart(${p.id}, -1)">-</button>
-                                <span>${qty}</span>
-                                <button class="qty-btn" onclick="updateCart(${p.id}, 1)">+</button>
-                            </div>`
-                        }
-                    </div>`;
-            });
-        }
-
-        function openProduct(id) {
-            haptic();
-            const p = products.find(prod => prod.id === id);
-            document.getElementById('pm-title').innerText = p.name;
-            let imagesHtml = p.images.map(img => `<img src="${img}">`).join('');
-            let sizesHtml = p.sizes.map(s => `<span class="badge">${s}</span>`).join('');
-            const qty = cart[p.id] || 0;
-            
-            let btnHtml = qty === 0 
-                ? `<button class="btn" onclick="updateCart(${p.id}, 1); toggleModal('product-modal', false)">Добавить за ${p.price} ₴</button>`
-                : `<div class="qty-controls" style="padding: 12px;"><button class="qty-btn" onclick="updateCart(${p.id}, -1)">-</button><span>В корзине: ${qty} шт.</span><button class="qty-btn" onclick="updateCart(${p.id}, 1)">+</button></div>`;
-
-            document.getElementById('pm-content').innerHTML = `
-                <div class="carousel">${imagesHtml}</div>
-                <div class="desc-block">
-                    <div class="product-price" style="font-size: 20px;">${p.price} ₴</div>
-                    <p style="font-size: 14px; color: var(--gray-text);">${p.desc}</p>
-                    <div style="margin-top: 10px;"><b>Размеры:</b><br>${sizesHtml}</div>
+        // Рендер каталога с галереей
+        const grid = document.getElementById('catalog-grid');
+        grid.innerHTML = data.products.map(p => `
+            <div class="bento-card">
+                <div class="gallery">
+                    <img src="https://via.placeholder.com/300">
+                    <img src="https://via.placeholder.com/300">
                 </div>
-                ${btnHtml}
-            `;
-            toggleModal('product-modal', true);
-        }
+                <h3>${p.name}</h3>
+                <div style="font-size:24px; font-weight:800; color:var(--accent);">${p.price} ₴</div>
+                <button class="stylist-btn" onclick="sendRequest('help', ${p.id})">💡 Помощь стилиста</button>
+                <button onclick="sendRequest('order', ${p.id})" style="width:100%; background:var(--accent); color:white; border:none; padding:15px; border-radius:18px; margin-top:10px; font-weight:700;">🛍 Заказать</button>
+            </div>
+        `).join('');
+    }
 
-        function updateCart(id, change) {
-            haptic();
-            if (!cart[id]) cart[id] = 0;
-            cart[id] += change;
-            if (cart[id] <= 0) delete cart[id];
-            
-            renderProducts();
-            if (activeModal === 'cart-modal') renderCartItems();
-            if (activeModal === 'product-modal') openProduct(id);
-            updateCartUI();
-        }
+    async function sendRequest(type, pid) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        
+        // Показ анимации успеха
+        document.getElementById('success-anim').style.display = 'flex';
+        
+        const payload = {
+            type: type,
+            items: pid,
+            customer: { name: tg.initDataUnsafe.user?.first_name, phone: "+380..." },
+            total: 1200
+        };
+        
+        tg.sendData(JSON.stringify(payload));
+        
+        setTimeout(() => {
+            document.getElementById('success-anim').style.display = 'none';
+        }, 3000);
+    }
 
-        function renderCartItems() {
-            const container = document.getElementById('cart-items');
-            const form = document.getElementById('checkout-form');
-            container.innerHTML = '';
-            
-            if (Object.keys(cart).length === 0) {
-                container.innerHTML = '<p style="text-align:center;">Корзина пуста</p>';
-                form.style.display = 'none';
-                return;
-            }
-
-            for (const [id, qty] of Object.entries(cart)) {
-                const p = products.find(prod => prod.id == id);
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <img src="${p.images[0]}">
-                        <div class="cart-item-info">
-                            <div class="product-title">${p.name}</div>
-                            <div class="product-price">${p.price * qty} ₴</div>
-                        </div>
-                        <div class="qty-controls" style="width: 90px;">
-                            <button class="qty-btn" onclick="updateCart(${p.id}, -1)">-</button>
-                            <span>${qty}</span>
-                            <button class="qty-btn" onclick="updateCart(${p.id}, 1)">+</button>
-                        </div>
-                    </div>`;
-            }
-            form.style.display = 'block';
-        }
-
-        function updateCartUI() {
-            let total = 0, itemsCount = 0;
-            for (const [id, qty] of Object.entries(cart)) {
-                total += products.find(p => p.id == id).price * qty;
-                itemsCount += qty;
-            }
-
-            let finalTotal = Math.round(total * discountMultiplier);
-
-            const floatingBtn = document.getElementById('floating-cart');
-            if (itemsCount > 0 && !activeModal) {
-                floatingBtn.classList.remove('hidden');
-                document.getElementById('cart-badge').innerText = `• ${finalTotal} ₴`;
-            } else {
-                floatingBtn.classList.add('hidden');
-            }
-
-            if (activeModal === 'cart-modal') {
-                let summaryHtml = `Итого: ${finalTotal} ₴`;
-                if (discountMultiplier < 1) summaryHtml += `<br><span class="discount">Скидка применена!</span>`;
-                document.getElementById('price-summary').innerHTML = summaryHtml;
-            }
-
-            if (tg.MainButton) {
-                if (activeModal === 'cart-modal' && itemsCount > 0) {
-                    tg.MainButton.text = `Оформить заказ на ${finalTotal} ₴`;
-                    tg.MainButton.show();
-                } else {
-                    tg.MainButton.hide();
-                }
-            }
-        }
-
-        function toggleModal(modalId, show) {
-            haptic();
-            const modal = document.getElementById(modalId);
-            if (show) {
-                activeModal = modalId;
-                modal.classList.add('active');
-                if (modalId === 'cart-modal') renderCartItems();
-                if (tg.BackButton) tg.BackButton.show();
-            } else {
-                modal.classList.remove('active');
-                activeModal = null;
-                if (tg.BackButton) tg.BackButton.hide();
-            }
-            updateCartUI();
-        }
-
-        if (tg.BackButton) tg.BackButton.onClick(() => { if (activeModal) toggleModal(activeModal, false); });
-
-        if (tg.MainButton) {
-            tg.MainButton.onClick(() => {
-                const name = document.getElementById('order-name').value;
-                const phone = document.getElementById('order-phone').value;
-                const address = document.getElementById('order-address').value;
-
-                if(!name || !phone || !address) {
-                    tg.showAlert("Заполните адрес доставки!");
-                    return;
-                }
-
-                const orderData = {
-                    items: cart,
-                    discount: discountMultiplier,
-                    customer: { name, phone, address }
-                };
-                
-                // Отправляем данные боту (работает только в Telegram)
-                tg.sendData(JSON.stringify(orderData)); 
-            });
-        }
-
-        // Запуск!
-        loadProducts();
-    </script>
+    init();
+</script>
 </body>
-
 </html>
-
