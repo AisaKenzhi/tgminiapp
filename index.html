@@ -77,10 +77,10 @@
         <h1 class="page-title">Мой профиль</h1>
         
         <div class="profile-header" onclick="openStatusModal()">
-            <img src="https://via.placeholder.com/60" class="avatar" id="profile-avatar">
+            <img src="" class="avatar" id="profile-avatar" alt="Avatar">
             <div style="flex-grow: 1;">
-                <div style="font-size: 18px; font-weight: 800;" id="tg-user">@username</div>
-                <div style="font-size: 13px; color: var(--accent); font-weight: 700;">Статус: <span id="client-status">Новичок</span> ℹ️</div>
+                <div style="font-size: 18px; font-weight: 800;" id="tg-user">Загрузка...</div>
+                <div style="font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 2px;">Статус: <span id="client-status">Новичок</span> ℹ️</div>
             </div>
         </div>
         
@@ -161,17 +161,17 @@
             
             <div class="status-card" style="background: #F4F6F9;">
                 <h3 style="color: var(--text-dark);">🥉 Новичок</h3>
-                <p>Вы только начинаете свой путь. Базовый доступ к каталогу и скидкам.</p>
+                <p>Вы только начинаете свой путь. Базовый доступ к каталогу.</p>
             </div>
             
             <div class="status-card" style="background: rgba(192, 192, 192, 0.15); border: 1px solid #C0C0C0;">
                 <h3 style="color: #808080;">🥈 Silver (от 5 000 ₴)</h3>
-                <p>Доступ к закрытым распродажам раньше других + персональные промокоды.</p>
+                <p>Доступ к закрытым распродажам раньше других.</p>
             </div>
 
             <div class="status-card" style="background: rgba(255, 215, 0, 0.15); border: 1px solid #FFD700;">
                 <h3 style="color: #D4AF37;">🥇 Gold (от 15 000 ₴)</h3>
-                <p>Постоянная скидка постоянного клиента, приоритетная сборка и бонусы.</p>
+                <p>Постоянная скидка клиента, приоритетная сборка и бонусы.</p>
             </div>
             
             <button class="btn btn-primary" style="margin-top: 10px;" onclick="closeModal('status-modal')">Понятно</button>
@@ -199,13 +199,23 @@
         tg.expand();
         const user = tg.initDataUnsafe.user;
         
-        // --- 1. Аватарка и Юзернейм ---
-        const usernameDisplay = user?.username ? `@${user.username}` : (user?.first_name || "Client");
+        // Умная обработка Имени и Юзернейма
+        const firstName = user?.first_name || "Client";
+        const usernameDisplay = user?.username ? `@${user.username}` : firstName;
         document.getElementById('tg-user').innerText = usernameDisplay;
         
-        if(user?.photo_url) {
-            document.getElementById('profile-avatar').src = user.photo_url;
+        // Умная аватарка (если нет фото от ТГ - генерируем красивую с первой буквой имени)
+        const avatarEl = document.getElementById('profile-avatar');
+        if (user?.photo_url) {
+            avatarEl.src = user.photo_url;
+        } else {
+            avatarEl.src = `https://ui-avatars.com/api/?name=${firstName}&background=3A6DFF&color=fff&rounded=true&size=120`;
         }
+
+        // Если фото от ТГ сломано (защита Telegram) - подставляем сгенерированную
+        avatarEl.onerror = function() {
+            this.src = `https://ui-avatars.com/api/?name=${firstName}&background=3A6DFF&color=fff&rounded=true&size=120`;
+        };
 
         try {
             const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`, { headers: {"ngrok-skip-browser-warning": "true"} });
@@ -338,7 +348,7 @@
         return Math.round(final);
     }
 
-    // --- 2. Экспорт Wishlist в Instagram и Telegram ---
+    // Экспорт в Instagram / Telegram
     function shareToTelegramStory() {
         const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
         if(tg.shareToStory) {
@@ -352,19 +362,11 @@
         const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
         const textToShare = "Смотри мой Wishlist в Vesto Bayer! ✨";
         
-        // Используем нативный Web Share API (откроет шторку "Поделиться" на iOS/Android, где есть Instagram)
         if (navigator.share) {
             try {
-                await navigator.share({
-                    title: 'Vesto Wishlist',
-                    text: textToShare,
-                    url: link
-                });
-            } catch (err) {
-                console.log('Пользователь отменил шаринг');
-            }
+                await navigator.share({ title: 'Vesto Wishlist', text: textToShare, url: link });
+            } catch (err) { console.log('Шаринг отменен'); }
         } else {
-            // Фолбэк, если Share API не поддерживается
             tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(textToShare)}`);
         }
     }
