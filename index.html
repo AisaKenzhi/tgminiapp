@@ -35,7 +35,7 @@
         .heart.active { color: #FF4B4B; }
 
         /* Профиль */
-        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer;}
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #ddd; object-fit: cover; }
 
         /* Модалки */
@@ -53,6 +53,11 @@
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; font-weight: 600; width: 60px;}
         .nav-item.active { color: var(--accent); }
+        
+        /* Статусы в модалке */
+        .status-card { padding: 15px; border-radius: 16px; margin-bottom: 15px; }
+        .status-card h3 { margin: 0 0 5px 0; font-size: 16px; }
+        .status-card p { margin: 0; font-size: 13px; color: var(--text-gray); line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -70,24 +75,29 @@
 
     <div id="view-profile" class="view">
         <h1 class="page-title">Мой профиль</h1>
-        <div class="profile-header">
-            <img src="${tg.initDataUnsafe.user?.photo_url || 'https://via.placeholder.com/60'}" class="avatar">
-            <div>
-                <div style="font-size: 18px; font-weight: 800;">@<span id="tg-user">username</span></div>
-                <div style="font-size: 13px; color: var(--accent); font-weight: 700;">Статус: <span id="client-status">Новичок</span></div>
+        
+        <div class="profile-header" onclick="openStatusModal()">
+            <img src="https://via.placeholder.com/60" class="avatar" id="profile-avatar">
+            <div style="flex-grow: 1;">
+                <div style="font-size: 18px; font-weight: 800;" id="tg-user">@username</div>
+                <div style="font-size: 13px; color: var(--accent); font-weight: 700;">Статус: <span id="client-status">Новичок</span> ℹ️</div>
             </div>
         </div>
+        
         <div class="profile-header">
             <div>
-                <div style="color: var(--text-gray); font-size: 12px;">Сумма покупок</div>
+                <div style="color: var(--text-gray); font-size: 12px;">Сумма покупок за все время</div>
                 <div style="font-size: 20px; font-weight: 800;" id="total-spent">0 ₴</div>
             </div>
         </div>
     </div>
 
     <div id="view-wishlist" class="view">
-        <h1 class="page-title">Избранное ❤️</h1>
-        <button class="btn btn-primary" style="margin-bottom: 15px; box-shadow: none;" onclick="shareWishlist()">📸 Поделиться в Сторис</button>
+        <h1 class="page-title">My Wishlist ❤️</h1>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button class="btn btn-primary" style="margin-top:0; padding: 12px; font-size: 13px;" onclick="shareToTelegramStory()">✈️ В TG Сториc</button>
+            <button class="btn" style="margin-top:0; padding: 12px; font-size: 13px; background: #E1306C; color: white;" onclick="shareAnywhere()">📸 Поделиться</button>
+        </div>
         <div class="grid" id="wishlist-grid"></div>
     </div>
 
@@ -114,7 +124,7 @@
             <div style="color: var(--text-dark); font-size: 14px; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap;" id="modal-desc"></div>
             
             <button class="btn btn-primary" id="modal-add-btn">Добавить в корзину</button>
-            <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
+            <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Отправить другу</button>
         </div>
     </div>
 
@@ -141,10 +151,37 @@
         </div>
     </div>
 
+    <div id="status-modal" class="modal" style="background: white;">
+        <div class="modal-close" onclick="closeModal('status-modal')" style="background: #eee; color: #333;">×</div>
+        <div style="padding: 60px 20px 20px;">
+            <h2 style="margin-bottom: 10px; font-size: 24px;">Программа Лояльности</h2>
+            <p style="color: var(--text-gray); font-size: 13px; margin-bottom: 25px; line-height: 1.4;">
+                Покупайте больше, чтобы повышать свой статус и получать персональные привилегии в Vesto Bayer.
+            </p>
+            
+            <div class="status-card" style="background: #F4F6F9;">
+                <h3 style="color: var(--text-dark);">🥉 Новичок</h3>
+                <p>Вы только начинаете свой путь. Базовый доступ к каталогу и скидкам.</p>
+            </div>
+            
+            <div class="status-card" style="background: rgba(192, 192, 192, 0.15); border: 1px solid #C0C0C0;">
+                <h3 style="color: #808080;">🥈 Silver (от 5 000 ₴)</h3>
+                <p>Доступ к закрытым распродажам раньше других + персональные промокоды.</p>
+            </div>
+
+            <div class="status-card" style="background: rgba(255, 215, 0, 0.15); border: 1px solid #FFD700;">
+                <h3 style="color: #D4AF37;">🥇 Gold (от 15 000 ₴)</h3>
+                <p>Постоянная скидка постоянного клиента, приоритетная сборка и бонусы.</p>
+            </div>
+            
+            <button class="btn btn-primary" style="margin-top: 10px;" onclick="closeModal('status-modal')">Понятно</button>
+        </div>
+    </div>
+
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('store', this)"><div style="font-size: 20px; margin-bottom: 3px;">🏠</div>Магазин</div>
         <div class="nav-item" onclick="switchTab('profile', this)"><div style="font-size: 20px; margin-bottom: 3px;">👤</div>Профиль</div>
-        <div class="nav-item" onclick="switchTab('wishlist', this)"><div style="font-size: 20px; margin-bottom: 3px;">❤️</div>Избранное</div>
+        <div class="nav-item" onclick="switchTab('wishlist', this)"><div style="font-size: 20px; margin-bottom: 3px;">❤️</div>Wishlist</div>
         <div class="nav-item" onclick="switchTab('cart', this)"><div style="font-size: 20px; margin-bottom: 3px;">🛒</div>Корзина</div>
     </div>
 
@@ -161,8 +198,15 @@
     async function init() {
         tg.expand();
         const user = tg.initDataUnsafe.user;
-        document.getElementById('tg-user').innerText = user?.username || user?.first_name || "Client";
         
+        // --- 1. Аватарка и Юзернейм ---
+        const usernameDisplay = user?.username ? `@${user.username}` : (user?.first_name || "Client");
+        document.getElementById('tg-user').innerText = usernameDisplay;
+        
+        if(user?.photo_url) {
+            document.getElementById('profile-avatar').src = user.photo_url;
+        }
+
         try {
             const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`, { headers: {"ngrok-skip-browser-warning": "true"} });
             store = await res.json();
@@ -199,7 +243,7 @@
 
     function renderWishlist() {
         const liked = store.products.filter(p => p.is_liked);
-        document.getElementById('wishlist-grid').innerHTML = liked.length ? liked.map(createCard).join('') : '<div style="grid-column: span 2; text-align:center; padding: 20px; color: var(--text-gray);">Пусто</div>';
+        document.getElementById('wishlist-grid').innerHTML = liked.length ? liked.map(createCard).join('') : '<div style="grid-column: span 2; text-align:center; padding: 20px; color: var(--text-gray);">Список пуст</div>';
     }
 
     function createCard(p) {
@@ -241,6 +285,11 @@
     }
 
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    
+    function openStatusModal() {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        document.getElementById('status-modal').style.display = 'block';
+    }
 
     async function toggleLike(pid, el) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -289,41 +338,57 @@
         return Math.round(final);
     }
 
-    function shareWishlist() {
+    // --- 2. Экспорт Wishlist в Instagram и Telegram ---
+    function shareToTelegramStory() {
         const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
         if(tg.shareToStory) {
             tg.shareToStory("https://via.placeholder.com/1080x1920.png?text=My+Wishlist+Vesto", {text: "Смотри мой Wishlist в Vesto Bayer! " + link});
         } else {
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=Мой Wishlist в Vesto Bayer!`);
+            tg.showAlert("Обновите Telegram для использования Stories.");
         }
     }
 
-    // Открываем форму вместо мгновенной отправки
+    async function shareAnywhere() {
+        const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
+        const textToShare = "Смотри мой Wishlist в Vesto Bayer! ✨";
+        
+        // Используем нативный Web Share API (откроет шторку "Поделиться" на iOS/Android, где есть Instagram)
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Vesto Wishlist',
+                    text: textToShare,
+                    url: link
+                });
+            } catch (err) {
+                console.log('Пользователь отменил шаринг');
+            }
+        } else {
+            // Фолбэк, если Share API не поддерживается
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(textToShare)}`);
+        }
+    }
+
     function openCheckoutForm() {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        
-        // Автозаполнение имени (если Telegram его отдает)
         const firstName = tg.initDataUnsafe.user?.first_name || "";
         const lastName = tg.initDataUnsafe.user?.last_name || "";
         document.getElementById('order-name').value = `${firstName} ${lastName}`.trim();
-        
         document.getElementById('checkout-final-price').innerText = `${updateTotal()} ₴`;
         document.getElementById('checkout-modal').style.display = 'block';
     }
 
-    // Собираем данные формы и отправляем в бот
     function confirmOrder() {
         const name = document.getElementById('order-name').value.trim();
         const phone = document.getElementById('order-phone').value.trim();
         const address = document.getElementById('order-address').value.trim();
 
         if(!name || !phone || !address) {
-            tg.showAlert("⚠️ Пожалуйста, заполните все поля (Имя, Телефон, Адрес).");
+            tg.showAlert("⚠️ Пожалуйста, заполните все поля.");
             return;
         }
 
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        
         const finalPrice = updateTotal();
         
         tg.sendData(JSON.stringify({ 
@@ -331,11 +396,7 @@
             items: cart.map(i=>i.name).join(', '), 
             total: finalPrice, 
             promo: document.getElementById('promo-input').value,
-            customer: {
-                name: name,
-                phone: phone,
-                address: address
-            }
+            customer: { name: name, phone: phone, address: address }
         }));
         tg.close();
     }
