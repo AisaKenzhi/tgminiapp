@@ -14,13 +14,11 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Категории */
         .categories { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
         .categories::-webkit-scrollbar { display: none; }
         .chip { background: var(--card); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--text-gray); cursor: pointer; border: 2px solid transparent; white-space: nowrap; }
         .chip.active { background: rgba(58, 109, 255, 0.1); color: var(--accent); border-color: var(--accent); }
 
-        /* Карточка товара */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 10px; position: relative; text-align: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; background: #f0f0f0; }
@@ -34,30 +32,28 @@
         .heart { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .heart.active { color: #FF4B4B; }
 
-        /* Профиль */
-        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer;}
+        /* ПРОФИЛЬ */
+        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #ddd; object-fit: cover; }
+        .edit-btn { background: var(--bg); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
 
-        /* Модалки */
+        /* ВЫБОР АВАТАРОК */
+        .avatar-presets { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .avatar-presets::-webkit-scrollbar { display: none; }
+        .preset-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid transparent; cursor: pointer; background: #eee; }
+        .preset-img.active { border-color: var(--accent); transform: scale(1.05); }
+
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; overflow-y: auto; padding-bottom: 90px; }
         .modal-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; }
         .modal-gallery img { width: 100%; height: 350px; object-fit: cover; scroll-snap-align: start; flex: 0 0 100%; }
         .modal-close { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 20px; cursor: pointer; }
 
-        /* Поля ввода (Форма заказа) */
-        .input-field { width: 100%; box-sizing: border-box; padding: 14px; border-radius: 16px; border: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text-dark); transition: 0.3s; }
-        .input-field:focus { outline: none; border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(58,109,255,0.1); }
+        .input-field { width: 100%; box-sizing: border-box; padding: 14px; border-radius: 16px; border: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text-dark); }
         .input-label { font-size: 12px; font-weight: 700; color: var(--text-gray); margin-bottom: 6px; display: block; margin-left: 5px; }
 
-        /* Нижнее меню */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; font-weight: 600; width: 60px;}
         .nav-item.active { color: var(--accent); }
-        
-        /* Статусы в модалке */
-        .status-card { padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .status-card h3 { margin: 0 0 5px 0; font-size: 16px; }
-        .status-card p { margin: 0; font-size: 13px; color: var(--text-gray); line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -76,12 +72,13 @@
     <div id="view-profile" class="view">
         <h1 class="page-title">Мой профиль</h1>
         
-        <div class="profile-header" onclick="openStatusModal()">
-            <img src="" class="avatar" id="profile-avatar" alt="Avatar">
-            <div style="flex-grow: 1;">
+        <div class="profile-header">
+            <img src="" class="avatar" id="profile-avatar" onclick="openStatusModal()">
+            <div style="flex-grow: 1;" onclick="openStatusModal()">
                 <div style="font-size: 18px; font-weight: 800;" id="tg-user">Загрузка...</div>
                 <div style="font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 2px;">Статус: <span id="client-status">Новичок</span> ℹ️</div>
             </div>
+            <div class="edit-btn" onclick="openEditProfile()">✏️</div>
         </div>
         
         <div class="profile-header">
@@ -114,6 +111,27 @@
         </div>
     </div>
 
+    <div id="edit-profile-modal" class="modal" style="background: white;">
+        <div class="modal-close" onclick="closeModal('edit-profile-modal')" style="background: #eee; color: #333;">×</div>
+        <div style="padding: 60px 20px 20px;">
+            <h2 style="margin-bottom: 25px; font-size: 24px;">Изменить профиль</h2>
+            
+            <label class="input-label">Ваше Имя</label>
+            <input type="text" id="custom-name-input" class="input-field" placeholder="Например: Кристина">
+            
+            <label class="input-label" style="margin-top: 10px;">Выберите Аватарку</label>
+            <div class="avatar-presets" id="avatar-presets">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=A" class="preset-img active" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/notionists/svg?seed=A')">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=B" class="preset-img" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/notionists/svg?seed=B')">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=C" class="preset-img" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/notionists/svg?seed=C')">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=D" class="preset-img" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/notionists/svg?seed=D')">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=E" class="preset-img" onclick="selectAvatar(this, 'https://api.dicebear.com/7.x/notionists/svg?seed=E')">
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 30px;" onclick="saveProfile()">Сохранить</button>
+        </div>
+    </div>
+
     <div id="product-modal" class="modal">
         <div class="modal-close" onclick="closeModal('product-modal')">×</div>
         <div class="modal-gallery" id="modal-gallery"></div>
@@ -122,7 +140,6 @@
             <h2 id="modal-title" style="margin-bottom: 5px; font-size: 22px;"></h2>
             <div id="modal-price" style="color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 15px;"></div>
             <div style="color: var(--text-dark); font-size: 14px; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap;" id="modal-desc"></div>
-            
             <button class="btn btn-primary" id="modal-add-btn">Добавить в корзину</button>
             <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Отправить другу</button>
         </div>
@@ -132,21 +149,16 @@
         <div class="modal-close" onclick="closeModal('checkout-modal')" style="background: #eee; color: #333;">×</div>
         <div style="padding: 60px 20px 20px;">
             <h2 style="margin-bottom: 25px; font-size: 26px;">Доставка</h2>
-            
             <label class="input-label">Имя и Фамилия</label>
             <input type="text" id="order-name" class="input-field" placeholder="Анна Иванова">
-            
             <label class="input-label">Контактный телефон</label>
             <input type="tel" id="order-phone" class="input-field" placeholder="+380...">
-            
             <label class="input-label">Город и Отделение доставки</label>
             <textarea id="order-address" class="input-field" rows="3" placeholder="г. Киев, Новая Почта №15"></textarea>
-            
             <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 20px;">
                 <div style="font-size: 13px; color: var(--text-gray);">К оплате:</div>
                 <div style="font-size: 24px; font-weight: 800; color: var(--accent);" id="checkout-final-price">0 ₴</div>
             </div>
-
             <button class="btn btn-primary" onclick="confirmOrder()">Подтвердить заказ</button>
         </div>
     </div>
@@ -156,25 +168,17 @@
         <div style="padding: 60px 20px 20px;">
             <h2 style="margin-bottom: 10px; font-size: 24px;">Программа Лояльности</h2>
             <p style="color: var(--text-gray); font-size: 13px; margin-bottom: 25px; line-height: 1.4;">
-                Покупайте больше, чтобы повышать свой статус и получать персональные привилегии в Vesto Bayer.
+                Покупайте больше, чтобы повышать свой статус и получать привилегии.
             </p>
-            
-            <div class="status-card" style="background: #F4F6F9;">
-                <h3 style="color: var(--text-dark);">🥉 Новичок</h3>
-                <p>Вы только начинаете свой путь. Базовый доступ к каталогу.</p>
+            <div style="padding: 15px; border-radius: 16px; margin-bottom: 15px; background: #F4F6F9;">
+                <h3 style="margin: 0 0 5px 0;">🥉 Новичок</h3><p style="margin: 0; font-size: 13px; color: var(--text-gray);">Базовый доступ к каталогу.</p>
             </div>
-            
-            <div class="status-card" style="background: rgba(192, 192, 192, 0.15); border: 1px solid #C0C0C0;">
-                <h3 style="color: #808080;">🥈 Silver (от 5 000 ₴)</h3>
-                <p>Доступ к закрытым распродажам раньше других.</p>
+            <div style="padding: 15px; border-radius: 16px; margin-bottom: 15px; background: rgba(192, 192, 192, 0.15); border: 1px solid #C0C0C0;">
+                <h3 style="margin: 0 0 5px 0; color: #808080;">🥈 Silver (от 5 000 ₴)</h3><p style="margin: 0; font-size: 13px; color: var(--text-gray);">Доступ к закрытым распродажам.</p>
             </div>
-
-            <div class="status-card" style="background: rgba(255, 215, 0, 0.15); border: 1px solid #FFD700;">
-                <h3 style="color: #D4AF37;">🥇 Gold (от 15 000 ₴)</h3>
-                <p>Постоянная скидка клиента, приоритетная сборка и бонусы.</p>
+            <div style="padding: 15px; border-radius: 16px; margin-bottom: 15px; background: rgba(255, 215, 0, 0.15); border: 1px solid #FFD700;">
+                <h3 style="margin: 0 0 5px 0; color: #D4AF37;">🥇 Gold (от 15 000 ₴)</h3><p style="margin: 0; font-size: 13px; color: var(--text-gray);">Скидка клиента, приоритетная сборка.</p>
             </div>
-            
-            <button class="btn btn-primary" style="margin-top: 10px;" onclick="closeModal('status-modal')">Понятно</button>
         </div>
     </div>
 
@@ -194,28 +198,31 @@
     let cart = [];
     let currentCategory = 'Все';
     let activePromoDiscount = 0;
+    
+    // Переменная для выбранной пользователем аватарки
+    let selectedCustomAvatar = "https://api.dicebear.com/7.x/notionists/svg?seed=A";
 
     async function init() {
         tg.expand();
         const user = tg.initDataUnsafe.user;
         
-        // Умная обработка Имени и Юзернейма
-        const firstName = user?.first_name || "Client";
-        const usernameDisplay = user?.username ? `@${user.username}` : firstName;
-        document.getElementById('tg-user').innerText = usernameDisplay;
+        // --- ЗАГРУЗКА КАСТОМНОГО ПРОФИЛЯ ---
+        const savedName = localStorage.getItem('vesto_custom_name');
+        const savedAvatar = localStorage.getItem('vesto_custom_avatar');
         
-        // Умная аватарка (если нет фото от ТГ - генерируем красивую с первой буквой имени)
+        const firstName = user?.first_name || "Client";
+        const displayName = savedName ? savedName : (user?.username ? `@${user.username}` : firstName);
+        
+        document.getElementById('tg-user').innerText = displayName;
+        
         const avatarEl = document.getElementById('profile-avatar');
-        if (user?.photo_url) {
+        if (savedAvatar) {
+            avatarEl.src = savedAvatar;
+        } else if (user?.photo_url) {
             avatarEl.src = user.photo_url;
         } else {
             avatarEl.src = `https://ui-avatars.com/api/?name=${firstName}&background=3A6DFF&color=fff&rounded=true&size=120`;
         }
-
-        // Если фото от ТГ сломано (защита Telegram) - подставляем сгенерированную
-        avatarEl.onerror = function() {
-            this.src = `https://ui-avatars.com/api/?name=${firstName}&background=3A6DFF&color=fff&rounded=true&size=120`;
-        };
 
         try {
             const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`, { headers: {"ngrok-skip-browser-warning": "true"} });
@@ -227,13 +234,45 @@
         } catch(e) { tg.showAlert("Ошибка подключения к серверу"); }
     }
 
+    // --- ФУНКЦИИ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ---
+    function openEditProfile() {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        document.getElementById('edit-profile-modal').style.display = 'block';
+        
+        const currentName = document.getElementById('tg-user').innerText;
+        document.getElementById('custom-name-input').value = currentName.startsWith('@') ? '' : currentName;
+    }
+
+    function selectAvatar(element, url) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        document.querySelectorAll('.preset-img').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        selectedCustomAvatar = url;
+    }
+
+    function saveProfile() {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        const newName = document.getElementById('custom-name-input').value.trim();
+        
+        if(newName) {
+            localStorage.setItem('vesto_custom_name', newName);
+            document.getElementById('tg-user').innerText = newName;
+        }
+        
+        localStorage.setItem('vesto_custom_avatar', selectedCustomAvatar);
+        document.getElementById('profile-avatar').src = selectedCustomAvatar;
+        
+        closeModal('edit-profile-modal');
+        tg.showAlert("Профиль успешно обновлен! ✨");
+    }
+
+    // --- ОСТАЛЬНЫЕ ФУНКЦИИ (Магазин, Корзина, Модалки) ---
     function switchTab(id, el) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(`view-${id}`).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
-        
         if(id === 'wishlist') renderWishlist();
         if(id === 'cart') renderCart();
     }
@@ -295,28 +334,17 @@
     }
 
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    
-    function openStatusModal() {
-        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        document.getElementById('status-modal').style.display = 'block';
-    }
+    function openStatusModal() { if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); document.getElementById('status-modal').style.display = 'block'; }
 
     async function toggleLike(pid, el) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         const p = store.products.find(x => x.id === pid);
         p.is_liked = !p.is_liked;
         el.classList.toggle('active');
-        fetch(`${API_URL}/api/like`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({user_id: tg.initDataUnsafe.user?.id || 1551063019, product_id: pid})
-        });
+        fetch(`${API_URL}/api/like`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({user_id: tg.initDataUnsafe.user?.id || 1551063019, product_id: pid}) });
     }
 
-    function addToCart(p) { 
-        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        cart.push(p); 
-        tg.showAlert("✅ Товар добавлен в корзину!"); 
-    }
+    function addToCart(p) { if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy'); cart.push(p); tg.showAlert("✅ Товар добавлен в корзину!"); }
 
     function renderCart() {
         const list = document.getElementById('cart-list');
@@ -327,9 +355,7 @@
             <div style="flex-grow:1; font-weight:700;">${p.name} <br><span style="color:var(--accent); font-size:16px;">${p.price} ₴</span></div>
             <div onclick="cart.splice(${i},1); renderCart()" style="color:#FF4B4B; font-size:24px; display:flex; align-items:center;">×</div>
         </div>`).join('');
-        
-        totalBox.style.display = "block";
-        updateTotal();
+        totalBox.style.display = "block"; updateTotal();
     }
 
     function applyPromo() {
@@ -338,7 +364,7 @@
             activePromoDiscount = store.promos[code];
             tg.showAlert(`✅ Промокод применен! Скидка ${activePromoDiscount}%`);
             updateTotal();
-        } else { tg.showAlert("❌ Неверный или истекший промокод"); }
+        } else { tg.showAlert("❌ Неверный промокод"); }
     }
 
     function updateTotal() {
@@ -348,34 +374,24 @@
         return Math.round(final);
     }
 
-    // Экспорт в Instagram / Telegram
     function shareToTelegramStory() {
         const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
-        if(tg.shareToStory) {
-            tg.shareToStory("https://via.placeholder.com/1080x1920.png?text=My+Wishlist+Vesto", {text: "Смотри мой Wishlist в Vesto Bayer! " + link});
-        } else {
-            tg.showAlert("Обновите Telegram для использования Stories.");
-        }
+        if(tg.shareToStory) { tg.shareToStory("https://via.placeholder.com/1080x1920.png?text=My+Wishlist+Vesto", {text: "Мой Wishlist! " + link}); } 
+        else { tg.showAlert("Обновите Telegram."); }
     }
 
     async function shareAnywhere() {
         const link = `https://t.me/${store.bot_username}?start=wishlist_${tg.initDataUnsafe.user?.id}`;
-        const textToShare = "Смотри мой Wishlist в Vesto Bayer! ✨";
-        
-        if (navigator.share) {
-            try {
-                await navigator.share({ title: 'Vesto Wishlist', text: textToShare, url: link });
-            } catch (err) { console.log('Шаринг отменен'); }
-        } else {
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(textToShare)}`);
-        }
+        if (navigator.share) { try { await navigator.share({ title: 'Vesto Wishlist', text: "Мой Wishlist!", url: link }); } catch (err) {} } 
+        else { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}`); }
     }
 
     function openCheckoutForm() {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        const savedName = localStorage.getItem('vesto_custom_name');
         const firstName = tg.initDataUnsafe.user?.first_name || "";
-        const lastName = tg.initDataUnsafe.user?.last_name || "";
-        document.getElementById('order-name').value = `${firstName} ${lastName}`.trim();
+        document.getElementById('order-name').value = savedName ? savedName : firstName;
+        
         document.getElementById('checkout-final-price').innerText = `${updateTotal()} ₴`;
         document.getElementById('checkout-modal').style.display = 'block';
     }
@@ -385,20 +401,12 @@
         const phone = document.getElementById('order-phone').value.trim();
         const address = document.getElementById('order-address').value.trim();
 
-        if(!name || !phone || !address) {
-            tg.showAlert("⚠️ Пожалуйста, заполните все поля.");
-            return;
-        }
-
+        if(!name || !phone || !address) { tg.showAlert("⚠️ Пожалуйста, заполните все поля."); return; }
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        const finalPrice = updateTotal();
         
         tg.sendData(JSON.stringify({ 
-            type: 'order', 
-            items: cart.map(i=>i.name).join(', '), 
-            total: finalPrice, 
-            promo: document.getElementById('promo-input').value,
-            customer: { name: name, phone: phone, address: address }
+            type: 'order', items: cart.map(i=>i.name).join(', '), total: updateTotal(), 
+            promo: document.getElementById('promo-input').value, customer: { name: name, phone: phone, address: address }
         }));
         tg.close();
     }
