@@ -235,14 +235,17 @@
 
     async function init() {
         tg.expand();
-        applyThemeSettings(); // Запускаем тему при старте!
+        applyThemeSettings(); 
         
         const user = tg.initDataUnsafe.user;
         document.getElementById('tg-user').innerText = user?.username ? `@${user.username}` : (user?.first_name || "Client");
         document.getElementById('profile-avatar').src = user?.photo_url || `https://ui-avatars.com/api/?name=${user?.first_name||'C'}&background=3A6DFF&color=fff&rounded=true`;
 
         try {
-            const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`);
+            // ВОТ ЗДЕСЬ ДОБАВЛЕН ЗАГОЛОВОК ДЛЯ NGROK
+            const res = await fetch(`${API_URL}/api/init/${user?.id || 1551063019}`, { 
+                headers: { "ngrok-skip-browser-warning": "true" } 
+            });
             store = await res.json();
             document.getElementById('client-status').innerText = store.user.status;
             renderStore(); renderOrderHistory();
@@ -417,3 +420,4 @@
 </script>
 </body>
 </html>
+
