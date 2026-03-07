@@ -38,11 +38,16 @@
         .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #ddd; object-fit: cover; }
 
-        /* Модалка Товара (Детали) */
+        /* Модалки */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; overflow-y: auto; padding-bottom: 90px; }
         .modal-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; }
         .modal-gallery img { width: 100%; height: 350px; object-fit: cover; scroll-snap-align: start; flex: 0 0 100%; }
         .modal-close { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 20px; cursor: pointer; }
+
+        /* Поля ввода (Форма заказа) */
+        .input-field { width: 100%; box-sizing: border-box; padding: 14px; border-radius: 16px; border: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text-dark); transition: 0.3s; }
+        .input-field:focus { outline: none; border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(58,109,255,0.1); }
+        .input-label { font-size: 12px; font-weight: 700; color: var(--text-gray); margin-bottom: 6px; display: block; margin-left: 5px; }
 
         /* Нижнее меню */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
@@ -90,17 +95,17 @@
         <h1 class="page-title">Корзина 🛒</h1>
         <div id="cart-list"></div>
         <div id="cart-total-box" style="display:none; background: var(--card); padding: 20px; border-radius: 24px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-            <input type="text" id="promo-input" placeholder="Промокод (если есть)" style="width:100%; box-sizing:border-box; padding:12px; border-radius:12px; border:1px solid #eee; margin-bottom:10px; font-family:inherit;">
+            <input type="text" id="promo-input" placeholder="Промокод (если есть)" class="input-field" style="margin-bottom: 10px;">
             <button class="btn" style="background:var(--bg); color:var(--text-dark); margin-bottom: 15px;" onclick="applyPromo()">Применить код</button>
             <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 20px; margin-bottom: 10px;">
                 <span>Итого:</span> <span id="cart-total-price">0 ₴</span>
             </div>
-            <button class="btn btn-primary" onclick="sendOrder()">Оформить заказ</button>
+            <button class="btn btn-primary" onclick="openCheckoutForm()">Оформить заказ</button>
         </div>
     </div>
 
     <div id="product-modal" class="modal">
-        <div class="modal-close" onclick="closeModal()">×</div>
+        <div class="modal-close" onclick="closeModal('product-modal')">×</div>
         <div class="modal-gallery" id="modal-gallery"></div>
         <div style="padding: 20px; background: var(--card); border-radius: 30px 30px 0 0; margin-top: -20px; position: relative; z-index: 5;">
             <div id="modal-badge" class="badge" style="position:relative; display:inline-block; margin-bottom:10px; top:0; left:0;"></div>
@@ -110,6 +115,29 @@
             
             <button class="btn btn-primary" id="modal-add-btn">Добавить в корзину</button>
             <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="modal" style="background: white;">
+        <div class="modal-close" onclick="closeModal('checkout-modal')" style="background: #eee; color: #333;">×</div>
+        <div style="padding: 60px 20px 20px;">
+            <h2 style="margin-bottom: 25px; font-size: 26px;">Доставка</h2>
+            
+            <label class="input-label">Имя и Фамилия</label>
+            <input type="text" id="order-name" class="input-field" placeholder="Анна Иванова">
+            
+            <label class="input-label">Контактный телефон</label>
+            <input type="tel" id="order-phone" class="input-field" placeholder="+380...">
+            
+            <label class="input-label">Город и Отделение доставки</label>
+            <textarea id="order-address" class="input-field" rows="3" placeholder="г. Киев, Новая Почта №15"></textarea>
+            
+            <div style="background: var(--bg); padding: 15px; border-radius: 16px; margin-bottom: 20px;">
+                <div style="font-size: 13px; color: var(--text-gray);">К оплате:</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--accent);" id="checkout-final-price">0 ₴</div>
+            </div>
+
+            <button class="btn btn-primary" onclick="confirmOrder()">Подтвердить заказ</button>
         </div>
     </div>
 
@@ -123,7 +151,7 @@
 <script>
     const tg = window.Telegram.WebApp;
     // 🔴 ВАЖНО: ВСТАВЬ СВОЙ NGROK НИЖЕ 🔴
-    const API_URL = " https://unpendant-meteorically-felipe.ngrok-free.dev"; 
+    const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
     
     let store = { products: [], promos: {}, bot_username: "" };
     let cart = [];
@@ -175,7 +203,6 @@
     }
 
     function createCard(p) {
-        // Мы берем прямую ссылку ImgBB прямо из базы (первую до запятой)
         const img = p.image_ids ? p.image_ids.split(',')[0] : "https://via.placeholder.com/300";
         const badge = p.badge ? `<div class="badge">${p.badge}</div>` : '';
         return `
@@ -192,7 +219,6 @@
     function openModal(pid) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         const p = store.products.find(x => x.id === pid);
-        // Массив всех ссылок с ImgBB
         const images = p.image_ids ? p.image_ids.split(',') : [];
         const galleryHtml = images.map(url => `<img src="${url}">`).join('');
         
@@ -205,7 +231,7 @@
         if(p.badge) { badgeEl.style.display = 'inline-block'; badgeEl.innerText = p.badge; }
         else { badgeEl.style.display = 'none'; }
 
-        document.getElementById('modal-add-btn').onclick = () => { addToCart(p); closeModal(); };
+        document.getElementById('modal-add-btn').onclick = () => { addToCart(p); closeModal('product-modal'); };
         document.getElementById('modal-share-btn').onclick = () => {
             const link = `https://t.me/${store.bot_username}?start=item_${p.id}`;
             tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=Смотри какую вещь нашла в Vesto Bayer!`);
@@ -214,7 +240,7 @@
         document.getElementById('product-modal').style.display = 'block';
     }
 
-    function closeModal() { document.getElementById('product-modal').style.display = 'none'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     async function toggleLike(pid, el) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
@@ -260,6 +286,7 @@
         let sum = cart.reduce((a, b) => a + b.price, 0);
         let final = sum - (sum * (activePromoDiscount / 100));
         document.getElementById('cart-total-price').innerText = `${Math.round(final)} ₴`;
+        return Math.round(final);
     }
 
     function shareWishlist() {
@@ -271,11 +298,45 @@
         }
     }
 
-    function sendOrder() {
+    // Открываем форму вместо мгновенной отправки
+    function openCheckoutForm() {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        
+        // Автозаполнение имени (если Telegram его отдает)
+        const firstName = tg.initDataUnsafe.user?.first_name || "";
+        const lastName = tg.initDataUnsafe.user?.last_name || "";
+        document.getElementById('order-name').value = `${firstName} ${lastName}`.trim();
+        
+        document.getElementById('checkout-final-price').innerText = `${updateTotal()} ₴`;
+        document.getElementById('checkout-modal').style.display = 'block';
+    }
+
+    // Собираем данные формы и отправляем в бот
+    function confirmOrder() {
+        const name = document.getElementById('order-name').value.trim();
+        const phone = document.getElementById('order-phone').value.trim();
+        const address = document.getElementById('order-address').value.trim();
+
+        if(!name || !phone || !address) {
+            tg.showAlert("⚠️ Пожалуйста, заполните все поля (Имя, Телефон, Адрес).");
+            return;
+        }
+
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        let sum = cart.reduce((a, b) => a + b.price, 0);
-        let final = Math.round(sum - (sum * (activePromoDiscount / 100)));
-        tg.sendData(JSON.stringify({ type: 'order', items: cart.map(i=>i.name).join(', '), total: final, promo: document.getElementById('promo-input').value }));
+        
+        const finalPrice = updateTotal();
+        
+        tg.sendData(JSON.stringify({ 
+            type: 'order', 
+            items: cart.map(i=>i.name).join(', '), 
+            total: finalPrice, 
+            promo: document.getElementById('promo-input').value,
+            customer: {
+                name: name,
+                phone: phone,
+                address: address
+            }
+        }));
         tg.close();
     }
 
@@ -283,4 +344,3 @@
 </script>
 </body>
 </html>
-
