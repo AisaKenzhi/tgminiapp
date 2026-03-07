@@ -23,7 +23,7 @@
         /* Карточка товара */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 10px; position: relative; text-align: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; }
+        .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; background: #f0f0f0; }
         .badge { position: absolute; top: 10px; left: 10px; background: #FF4B4B; color: white; padding: 4px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; z-index: 2; }
         .product-title { font-size: 13px; font-weight: 700; margin: 8px 0 4px; line-height: 1.2; }
         .product-price { color: var(--accent); font-weight: 800; font-size: 16px; }
@@ -106,7 +106,7 @@
             <div id="modal-badge" class="badge" style="position:relative; display:inline-block; margin-bottom:10px; top:0; left:0;"></div>
             <h2 id="modal-title" style="margin-bottom: 5px; font-size: 22px;"></h2>
             <div id="modal-price" style="color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 15px;"></div>
-            <div style="color: var(--text-dark); font-size: 14px; line-height: 1.6; margin-bottom: 25px;" id="modal-desc"></div>
+            <div style="color: var(--text-dark); font-size: 14px; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap;" id="modal-desc"></div>
             
             <button class="btn btn-primary" id="modal-add-btn">Добавить в корзину</button>
             <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
@@ -122,8 +122,8 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // СЮДА ВСТАВЬ ССЫЛКУ ИЗ NGROK
-    const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
+    // 🔴 ВАЖНО: ВСТАВЬ СВОЙ NGROK НИЖЕ 🔴
+    const API_URL = "https://ТВОЯ_ССЫЛКА_NGROK.ngrok-free.dev"; 
     
     let store = { products: [], promos: {}, bot_username: "" };
     let cart = [];
@@ -141,9 +141,8 @@
             
             document.getElementById('client-status').innerText = store.user.status;
             document.getElementById('total-spent').innerText = `${store.user.total_spent} ₴`;
-            
             renderStore();
-        } catch(e) { tg.showAlert("Ошибка подключения"); }
+        } catch(e) { tg.showAlert("Ошибка подключения к серверу"); }
     }
 
     function switchTab(id, el) {
@@ -176,8 +175,8 @@
     }
 
     function createCard(p) {
-        // Берем первое фото для превью
-        const img = p.image_ids ? `${API_URL}/api/image/${p.image_ids.split(',')[0]}` : "https://via.placeholder.com/300";
+        // Мы берем прямую ссылку ImgBB прямо из базы (первую до запятой)
+        const img = p.image_ids ? p.image_ids.split(',')[0] : "https://via.placeholder.com/300";
         const badge = p.badge ? `<div class="badge">${p.badge}</div>` : '';
         return `
             <div class="product-card" onclick="openModal(${p.id})">
@@ -193,8 +192,9 @@
     function openModal(pid) {
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         const p = store.products.find(x => x.id === pid);
+        // Массив всех ссылок с ImgBB
         const images = p.image_ids ? p.image_ids.split(',') : [];
-        const galleryHtml = images.map(id => `<img src="${API_URL}/api/image/${id}">`).join('');
+        const galleryHtml = images.map(url => `<img src="${url}">`).join('');
         
         document.getElementById('modal-gallery').innerHTML = galleryHtml || '<img src="https://via.placeholder.com/400">';
         document.getElementById('modal-title').innerText = p.name;
@@ -230,7 +230,7 @@
     function addToCart(p) { 
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
         cart.push(p); 
-        tg.showAlert("✅ Товар в корзине!"); 
+        tg.showAlert("✅ Товар добавлен в корзину!"); 
     }
 
     function renderCart() {
@@ -253,7 +253,7 @@
             activePromoDiscount = store.promos[code];
             tg.showAlert(`✅ Промокод применен! Скидка ${activePromoDiscount}%`);
             updateTotal();
-        } else { tg.showAlert("❌ Неверный промокод"); }
+        } else { tg.showAlert("❌ Неверный или истекший промокод"); }
     }
 
     function updateTotal() {
