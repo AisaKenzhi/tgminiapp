@@ -20,33 +20,33 @@
         .chip { background: var(--card); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; color: var(--text-gray); cursor: pointer; border: 2px solid transparent; white-space: nowrap; }
         .chip.active { background: rgba(58, 109, 255, 0.1); color: var(--accent); border-color: var(--accent); }
 
+        /* Карточка товара */
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 10px; position: relative; text-align: center; cursor: pointer; }
+        .product-card { background: var(--card); border-radius: var(--radius-xl); padding: 10px; position: relative; text-align: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .product-img { width: 100%; height: 140px; border-radius: 16px; object-fit: cover; }
         .badge { position: absolute; top: 10px; left: 10px; background: #FF4B4B; color: white; padding: 4px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; z-index: 2; }
-        
-        .product-title { font-size: 13px; font-weight: 700; margin: 8px 0 4px; }
+        .product-title { font-size: 13px; font-weight: 700; margin: 8px 0 4px; line-height: 1.2; }
         .product-price { color: var(--accent); font-weight: 800; font-size: 16px; }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 16px; font-family: inherit; font-weight: 700; cursor: pointer; }
-        .btn-primary { background: var(--accent); color: white; margin-top: 10px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 16px; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 15px;}
+        .btn-primary { background: var(--accent); color: white; margin-top: 10px; box-shadow: 0 8px 20px rgba(58, 109, 255, 0.3); }
 
-        .heart { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .heart { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .heart.active { color: #FF4B4B; }
 
         /* Профиль */
-        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; }
+        .profile-header { display: flex; align-items: center; gap: 15px; background: var(--card); padding: 20px; border-radius: var(--radius-xl); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .avatar { width: 60px; height: 60px; border-radius: 50%; background: #ddd; object-fit: cover; }
 
-        /* Модалка Товара */
+        /* Модалка Товара (Детали) */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 2000; display: none; overflow-y: auto; padding-bottom: 90px; }
         .modal-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; }
         .modal-gallery img { width: 100%; height: 350px; object-fit: cover; scroll-snap-align: start; flex: 0 0 100%; }
         .modal-close { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 20px; cursor: pointer; }
 
         /* Нижнее меню */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; font-weight: 600; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 15px 10px 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; font-weight: 600; width: 60px;}
         .nav-item.active { color: var(--accent); }
     </style>
 </head>
@@ -82,17 +82,17 @@
 
     <div id="view-wishlist" class="view">
         <h1 class="page-title">Избранное ❤️</h1>
-        <button class="btn btn-primary" style="margin-bottom: 15px;" onclick="shareWishlist()">📸 Поделиться в Сторис</button>
+        <button class="btn btn-primary" style="margin-bottom: 15px; box-shadow: none;" onclick="shareWishlist()">📸 Поделиться в Сторис</button>
         <div class="grid" id="wishlist-grid"></div>
     </div>
 
     <div id="view-cart" class="view">
         <h1 class="page-title">Корзина 🛒</h1>
         <div id="cart-list"></div>
-        <div id="cart-total-box" style="display:none; background: var(--card); padding: 20px; border-radius: 24px; margin-top: 20px;">
-            <input type="text" id="promo-input" placeholder="Промокод" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;">
-            <button class="btn btn-primary" style="background:#000; margin-bottom: 15px;" onclick="applyPromo()">Применить код</button>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 20px;">
+        <div id="cart-total-box" style="display:none; background: var(--card); padding: 20px; border-radius: 24px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <input type="text" id="promo-input" placeholder="Промокод (если есть)" style="width:100%; box-sizing:border-box; padding:12px; border-radius:12px; border:1px solid #eee; margin-bottom:10px; font-family:inherit;">
+            <button class="btn" style="background:var(--bg); color:var(--text-dark); margin-bottom: 15px;" onclick="applyPromo()">Применить код</button>
+            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 20px; margin-bottom: 10px;">
                 <span>Итого:</span> <span id="cart-total-price">0 ₴</span>
             </div>
             <button class="btn btn-primary" onclick="sendOrder()">Оформить заказ</button>
@@ -102,26 +102,27 @@
     <div id="product-modal" class="modal">
         <div class="modal-close" onclick="closeModal()">×</div>
         <div class="modal-gallery" id="modal-gallery"></div>
-        <div style="padding: 20px;">
+        <div style="padding: 20px; background: var(--card); border-radius: 30px 30px 0 0; margin-top: -20px; position: relative; z-index: 5;">
             <div id="modal-badge" class="badge" style="position:relative; display:inline-block; margin-bottom:10px; top:0; left:0;"></div>
-            <h2 id="modal-title" style="margin-bottom: 5px;"></h2>
+            <h2 id="modal-title" style="margin-bottom: 5px; font-size: 22px;"></h2>
             <div id="modal-price" style="color: var(--accent); font-size: 24px; font-weight: 800; margin-bottom: 15px;"></div>
-            <div style="color: var(--text-gray); font-size: 14px; line-height: 1.5; margin-bottom: 20px;" id="modal-desc"></div>
+            <div style="color: var(--text-dark); font-size: 14px; line-height: 1.6; margin-bottom: 25px;" id="modal-desc"></div>
             
-            <button class="btn btn-primary" id="modal-add-btn">В корзину</button>
-            <button class="btn" style="background: rgba(0,0,0,0.05); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
+            <button class="btn btn-primary" id="modal-add-btn">Добавить в корзину</button>
+            <button class="btn" style="background: var(--bg); color: var(--text-dark); margin-top: 10px;" id="modal-share-btn">🔗 Поделиться товаром</button>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('store', this)">🏠<br>Магазин</div>
-        <div class="nav-item" onclick="switchTab('profile', this)">👤<br>Профиль</div>
-        <div class="nav-item" onclick="switchTab('wishlist', this)">❤️<br>Избранное</div>
-        <div class="nav-item" onclick="switchTab('cart', this)">🛒<br>Корзина</div>
+        <div class="nav-item active" onclick="switchTab('store', this)"><div style="font-size: 20px; margin-bottom: 3px;">🏠</div>Магазин</div>
+        <div class="nav-item" onclick="switchTab('profile', this)"><div style="font-size: 20px; margin-bottom: 3px;">👤</div>Профиль</div>
+        <div class="nav-item" onclick="switchTab('wishlist', this)"><div style="font-size: 20px; margin-bottom: 3px;">❤️</div>Избранное</div>
+        <div class="nav-item" onclick="switchTab('cart', this)"><div style="font-size: 20px; margin-bottom: 3px;">🛒</div>Корзина</div>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
+    // СЮДА ВСТАВЬ ССЫЛКУ ИЗ NGROK
     const API_URL = "https://unpendant-meteorically-felipe.ngrok-free.dev"; 
     
     let store = { products: [], promos: {}, bot_username: "" };
@@ -142,10 +143,11 @@
             document.getElementById('total-spent').innerText = `${store.user.total_spent} ₴`;
             
             renderStore();
-        } catch(e) { tg.showAlert("Ошибка загрузки"); }
+        } catch(e) { tg.showAlert("Ошибка подключения"); }
     }
 
     function switchTab(id, el) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(`view-${id}`).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -156,6 +158,7 @@
     }
 
     function filterCat(cat, el) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         currentCategory = cat;
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
@@ -169,10 +172,11 @@
 
     function renderWishlist() {
         const liked = store.products.filter(p => p.is_liked);
-        document.getElementById('wishlist-grid').innerHTML = liked.map(createCard).join('');
+        document.getElementById('wishlist-grid').innerHTML = liked.length ? liked.map(createCard).join('') : '<div style="grid-column: span 2; text-align:center; padding: 20px; color: var(--text-gray);">Пусто</div>';
     }
 
     function createCard(p) {
+        // Берем первое фото для превью
         const img = p.image_ids ? `${API_URL}/api/image/${p.image_ids.split(',')[0]}` : "https://via.placeholder.com/300";
         const badge = p.badge ? `<div class="badge">${p.badge}</div>` : '';
         return `
@@ -187,6 +191,7 @@
     }
 
     function openModal(pid) {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         const p = store.products.find(x => x.id === pid);
         const images = p.image_ids ? p.image_ids.split(',') : [];
         const galleryHtml = images.map(id => `<img src="${API_URL}/api/image/${id}">`).join('');
@@ -212,7 +217,7 @@
     function closeModal() { document.getElementById('product-modal').style.display = 'none'; }
 
     async function toggleLike(pid, el) {
-        tg.HapticFeedback.impactOccurred('light');
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         const p = store.products.find(x => x.id === pid);
         p.is_liked = !p.is_liked;
         el.classList.toggle('active');
@@ -222,16 +227,20 @@
         });
     }
 
-    function addToCart(p) { cart.push(p); tg.showAlert("Товар в корзине!"); }
+    function addToCart(p) { 
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        cart.push(p); 
+        tg.showAlert("✅ Товар в корзине!"); 
+    }
 
     function renderCart() {
         const list = document.getElementById('cart-list');
         const totalBox = document.getElementById('cart-total-box');
-        if(cart.length === 0) { list.innerHTML = "<div style='text-align:center; padding:20px;'>Корзина пуста</div>"; totalBox.style.display = "none"; return; }
+        if(cart.length === 0) { list.innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-gray);'>Корзина пуста</div>"; totalBox.style.display = "none"; return; }
 
-        list.innerHTML = cart.map((p, i) => `<div style="display:flex; gap:15px; margin-bottom:10px; background:white; padding:10px; border-radius:16px;">
-            <div style="flex-grow:1; font-weight:700;">${p.name} <br><span style="color:var(--accent);">${p.price} ₴</span></div>
-            <div onclick="cart.splice(${i},1); renderCart()" style="color:red; font-size:20px;">×</div>
+        list.innerHTML = cart.map((p, i) => `<div style="display:flex; gap:15px; margin-bottom:10px; background:white; padding:15px; border-radius:20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+            <div style="flex-grow:1; font-weight:700;">${p.name} <br><span style="color:var(--accent); font-size:16px;">${p.price} ₴</span></div>
+            <div onclick="cart.splice(${i},1); renderCart()" style="color:#FF4B4B; font-size:24px; display:flex; align-items:center;">×</div>
         </div>`).join('');
         
         totalBox.style.display = "block";
@@ -242,9 +251,9 @@
         const code = document.getElementById('promo-input').value.toUpperCase();
         if(store.promos[code]) {
             activePromoDiscount = store.promos[code];
-            tg.showAlert(`Промокод применен! Скидка ${activePromoDiscount}%`);
+            tg.showAlert(`✅ Промокод применен! Скидка ${activePromoDiscount}%`);
             updateTotal();
-        } else { tg.showAlert("Неверный промокод"); }
+        } else { tg.showAlert("❌ Неверный промокод"); }
     }
 
     function updateTotal() {
@@ -263,6 +272,7 @@
     }
 
     function sendOrder() {
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
         let sum = cart.reduce((a, b) => a + b.price, 0);
         let final = Math.round(sum - (sum * (activePromoDiscount / 100)));
         tg.sendData(JSON.stringify({ type: 'order', items: cart.map(i=>i.name).join(', '), total: final, promo: document.getElementById('promo-input').value }));
